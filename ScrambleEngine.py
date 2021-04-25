@@ -1,5 +1,11 @@
 import tkinter as tk
 
+from pexels_api import API
+import requests
+from PIL import ImageTk, Image
+
+import urllib.request as urllib
+from io import BytesIO
 
 class Main(tk.Frame):
     def __init__(self, root):
@@ -44,7 +50,6 @@ class Main(tk.Frame):
         # position of status bar
         self.status.grid(row=3, column=0, columnspan=102, sticky=tk.W, padx=(10, 0), pady=5)
 
-
     def delete_text(self, event):
         self.search.delete(0, tk.END)
 
@@ -70,10 +75,15 @@ class Main(tk.Frame):
     def click_search(self, event):
         # print("Search button pressed.")
         placeholder = self.search.get()
+
         if placeholder == "Enter <keyword> to search...":
             return
         else:
-            
+            keyword = self.search.get()
+            print("keyword = ", keyword)
+
+
+
 
             self.search.insert(0, "Enter <keyword> to search...")
             root.focus()
@@ -100,11 +110,34 @@ class Toolbar(tk.Menu):
 
 class Box(tk.Frame):
     def __init__(self, root):
-        super().__init__(root, bg="#3463ad", width=660, height=500)
-        self.grid()  # using Tkinter's grid system over pack
+        super().__init__(root, width=660, height=500)
+        # self.grid()  # using Tkinter's grid system over pack
 
-        self.testing = tk.Label(text="Testing")
-        self.testing.grid(row=0, column=0, sticky=tk.W)
+        self.image1 = tk.Canvas(self, bg="#3463ad", height=200, width=206)
+        self.image2 = tk.Canvas(self, bg="#3463ad", height=200, width=206)
+        self.image3 = tk.Canvas(self, bg="#3463ad", height=200, width=206)
+
+        self.image1.grid(row=0, column=0, sticky=tk.W, padx=(0, 15))
+        self.image2.grid(row=0, column=1, sticky=tk.W, padx=(0, 15))
+        self.image3.grid(row=0, column=2, sticky=tk.W, padx=(0, 0))
+
+        # url_1 = "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg"
+        url_1 = "https://drive.google.com/uc?id=1FumEJWkRjQ6DA7UevruTgnuINlmKThmQ"
+        response = requests.get(url_1)
+
+        im1 = Image.open(BytesIO(response.content)).resize((416, 416))
+
+
+        img = ImageTk.PhotoImage(im1)
+        self.panel = tk.Label(self, image=img)
+        self.panel.image = img
+
+        self.image1.create_image(0, 0, image=img)
+        self.image1.image = img
+
+
+
+
 
 
 
