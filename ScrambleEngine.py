@@ -17,7 +17,6 @@ class Main(tk.Frame):
         root.config(menu=self.toolbar)
 
         # add results area
-        # self.box = tk.Frame(self, bg="#3463ad", width=660, height=500)
         self.box = Box(self)
 
         # add buttons to the UI
@@ -54,7 +53,6 @@ class Main(tk.Frame):
         self.search.delete(0, tk.END)
 
     def add_text(self, event):
-        print('hi')
         self.search.delete(0, tk.END)
         self.search.insert(0, "Enter <keyword> to search...")
 
@@ -81,14 +79,31 @@ class Main(tk.Frame):
         else:
             keyword = self.search.get()
             print("keyword = ", keyword)
+            self.image_api(keyword)
 
-
-
-
+            self.search.delete(0, tk.END)
             self.search.insert(0, "Enter <keyword> to search...")
             root.focus()
 
+    def image_api(self, keyword):
+        temp_images = []
 
+        PEXELS_API_KEY = '563492ad6f91700001000001ecab8f7b0b9f4371b013fa9bc225c984'
+        api = API(PEXELS_API_KEY)
+        api.search('kitten', page=1, results_per_page=6)
+        images = api.get_entries()
+
+        for img in images:
+
+            # url_1 = "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg"
+            # url_1 = "https://drive.google.com/uc?id=1FumEJWkRjQ6DA7UevruTgnuINlmKThmQ"
+            response = requests.get(img.original)
+
+            im1 = Image.open(BytesIO(response.content)).resize((416, 416))
+            temp_images.append(im1)
+
+
+        self.box.set_images(temp_images)
 
 class Toolbar(tk.Menu):
     def __init__(self, root):
@@ -111,40 +126,41 @@ class Toolbar(tk.Menu):
 class Box(tk.Frame):
     def __init__(self, root):
         super().__init__(root, width=660, height=500)
-        # self.grid()  # using Tkinter's grid system over pack
 
-        self.image1 = tk.Canvas(self, bg="#3463ad", height=200, width=206)
-        self.image2 = tk.Canvas(self, bg="#3463ad", height=200, width=206)
-        self.image3 = tk.Canvas(self, bg="#3463ad", height=200, width=206)
+        self.images = []
+        self.images_canvas = []
 
-        self.image1.grid(row=0, column=0, sticky=tk.W, padx=(0, 15))
-        self.image2.grid(row=0, column=1, sticky=tk.W, padx=(0, 15))
-        self.image3.grid(row=0, column=2, sticky=tk.W, padx=(0, 0))
+        for x in range(2):
+            for y in range(3):
+                print("Creating canvas: #", x)
+                image = tk.Canvas(self, height=200, width=206)
+                image.grid(row=x, column=y, sticky=tk.W, padx=(0, 15), pady=(0, 15))
+                self.images_canvas.append(image)
 
-        # url_1 = "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg"
-        url_1 = "https://drive.google.com/uc?id=1FumEJWkRjQ6DA7UevruTgnuINlmKThmQ"
-        response = requests.get(url_1)
+    def set_images(self, img_set):
+        total_img = len(img_set)
 
-        im1 = Image.open(BytesIO(response.content)).resize((416, 416))
+        # add images to canvas
+        for x in range(total_img):
+
+            self.img = ImageTk.PhotoImage(img_set[x])
+
+            self.images.append(self.img)
 
 
-        self.img = ImageTk.PhotoImage(im1)
-        self.panel = tk.Label(self, image=self.img)
-        self.panel.image = self.img
+            self.images_canvas[x].create_image(0, 0, image=self.img)
+            self.images_canvas[x].image = self.img
+            self.images_canvas[x].bind("<Button-1>", lambda event, arg=self.images[x]: self.enlarge_images(event, arg))
 
-        self.image1.create_image(0, 0, image=self.img)
-        self.image1.image = self.img
 
-        self.image1.bind("<Button-1>", self.test)
-
-    def test(self, event):
-        print('hello world')
+    def enlarge_images(self, event, arg):
+        print("Arg = ", arg)
 
         image_window = tk.Toplevel(self)
         image_window.geometry("500x500")
         image_window.resizable(False, False)
 
-        image_label = tk.Label(image_window, image=self.img)
+        image_label = tk.Label(image_window, image=arg)
         image_label.grid(row=0, column=0)
 
 
