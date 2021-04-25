@@ -128,12 +128,25 @@ class Box(tk.Frame):
         im1 = Image.open(BytesIO(response.content)).resize((416, 416))
 
 
-        img = ImageTk.PhotoImage(im1)
-        self.panel = tk.Label(self, image=img)
-        self.panel.image = img
+        self.img = ImageTk.PhotoImage(im1)
+        self.panel = tk.Label(self, image=self.img)
+        self.panel.image = self.img
 
-        self.image1.create_image(0, 0, image=img)
-        self.image1.image = img
+        self.image1.create_image(0, 0, image=self.img)
+        self.image1.image = self.img
+
+        self.image1.bind("<Button-1>", self.test)
+
+    def test(self, event):
+        print('hello world')
+
+        image_window = tk.Toplevel(self)
+        image_window.geometry("500x500")
+        image_window.resizable(False, False)
+
+        image_label = tk.Label(image_window, image=self.img)
+        image_label.grid(row=0, column=0)
+
 
 
 
