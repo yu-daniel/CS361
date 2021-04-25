@@ -11,10 +11,8 @@ class Main(tk.Frame):
         root.config(menu=self.toolbar)
 
         # add results area
-        # self.box = Box(self)
-        self.box = tk.Frame(self, bg="#3463ad", width=660, height=500)
-
-
+        # self.box = tk.Frame(self, bg="#3463ad", width=660, height=500)
+        self.box = Box(self)
 
         # add buttons to the UI
         self.news = tk.Button(self, text="News")
@@ -23,10 +21,13 @@ class Main(tk.Frame):
         self.search_btn = tk.Button(self, text="Search")
         self.bored = tk.Button(self, text="I'm Feeling Bored")
 
+        # add status bar
+        self.status = tk.Label(text="Status messages will go here.", bg="#3463ad", fg="white")
+
         # add search field
         self.search = tk.Entry(self, width=100)
         self.search.insert(0, "Enter <keyword> to search...")
-        self.search.bind("<Button-1>", self.search_text)
+        self.search.bind("<Button-1>", self.search_text)            # bind mouse click to search field's placeholder
         self.search_btn.bind("<Button-1>", self.click_search)
 
         # position of objects (buttons, search entry, labels)
@@ -35,17 +36,13 @@ class Main(tk.Frame):
         self.videos.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
         self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
 
+        # add search field, search button, and search results position
         self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
         self.search_btn.grid(row=1, column=101, sticky=tk.W, padx=(0, 10))
-
         self.box.grid(row=2, column=0, columnspan=102, sticky=tk.W, padx=(10, 0), pady=7)
 
-
-
-
-
-
-
+        # position of status bar
+        self.status.grid(row=3, column=0, columnspan=102, sticky=tk.W, padx=(10, 0), pady=5)
 
 
     def delete_text(self, event):
@@ -76,8 +73,11 @@ class Main(tk.Frame):
         if placeholder == "Enter <keyword> to search...":
             return
         else:
+            
+
             self.search.insert(0, "Enter <keyword> to search...")
             root.focus()
+
 
 
 class Toolbar(tk.Menu):
@@ -100,16 +100,12 @@ class Toolbar(tk.Menu):
 
 class Box(tk.Frame):
     def __init__(self, root):
-        super().__init__(root, bg="#3463ad")
-
-
+        super().__init__(root, bg="#3463ad", width=660, height=500)
         self.grid()  # using Tkinter's grid system over pack
 
-        self.addLabel = tk.Label(self, text="Ticker: ")
-        self.addLabel.grid(row=0, column=0, sticky=tk.W, padx=10, pady=7)
+        self.testing = tk.Label(text="Testing")
+        self.testing.grid(row=0, column=0, sticky=tk.W)
 
-        self.addEntry = tk.Entry(self, width=15, fg="#3463ad")
-        self.addEntry.grid(row=1, column=0, sticky=tk.W, padx=50, pady=7)
 
 
 if __name__ == '__main__':
