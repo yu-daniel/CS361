@@ -1,19 +1,27 @@
 import tkinter as tk
 
+
 class Main(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
-        self.grid()                 # using Tkinter's grid system over pack
+        self.grid()  # using Tkinter's grid system over pack
 
         # initiate the main toolbar
         self.toolbar = Toolbar(self)
         root.config(menu=self.toolbar)
 
-        # add News/Images/Videos button
+        # add results area
+        # self.box = Box(self)
+        self.box = tk.Frame(self, bg="#3463ad", width=660, height=500)
+
+
+
+        # add buttons to the UI
         self.news = tk.Button(self, text="News")
         self.images = tk.Button(self, text="Images")
         self.videos = tk.Button(self, text="Videos")
         self.search_btn = tk.Button(self, text="Search")
+        self.bored = tk.Button(self, text="I'm Feeling Bored")
 
         # add search field
         self.search = tk.Entry(self, width=100)
@@ -25,9 +33,19 @@ class Main(tk.Frame):
         self.news.grid(row=0, column=0, sticky=tk.W, padx=(10, 3), pady=7)
         self.images.grid(row=0, column=1, sticky=tk.W, padx=3, pady=7)
         self.videos.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
+        self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
 
         self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
         self.search_btn.grid(row=1, column=101, sticky=tk.W, padx=(0, 10))
+
+        self.box.grid(row=2, column=0, columnspan=102, sticky=tk.W, padx=(10, 0), pady=7)
+
+
+
+
+
+
+
 
 
     def delete_text(self, event):
@@ -65,14 +83,13 @@ class Main(tk.Frame):
 class Toolbar(tk.Menu):
     def __init__(self, root):
         super().__init__(root)
-        self.root = root
         self.menu = tk.Menu(self)
 
         # file menu
         self.file = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="File")
 
-        # fiew menu
+        # view menu
         self.view = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="View")
 
@@ -81,9 +98,24 @@ class Toolbar(tk.Menu):
         self.add_cascade(label="Help")
 
 
+class Box(tk.Frame):
+    def __init__(self, root):
+        super().__init__(root, bg="#3463ad")
+
+
+        self.grid()  # using Tkinter's grid system over pack
+
+        self.addLabel = tk.Label(self, text="Ticker: ")
+        self.addLabel.grid(row=0, column=0, sticky=tk.W, padx=10, pady=7)
+
+        self.addEntry = tk.Entry(self, width=15, fg="#3463ad")
+        self.addEntry.grid(row=1, column=0, sticky=tk.W, padx=50, pady=7)
+
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title("Scramble Engine")       # add title to the app
-    app = Main(root)                    # initiate the main interface
-    root.mainloop()                     # keep Tkinter running
+    root.title("Scramble Engine")  # add title to the app
+    root.resizable(False, False)  # don't allow resizing window
+    root.geometry("680x620")
+    app = Main(root)  # initiate the main interface
+    root.mainloop()  # keep Tkinter running
