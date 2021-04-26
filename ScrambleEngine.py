@@ -88,18 +88,20 @@ class Main(tk.Frame):
     def image_api(self, keyword):
         temp_images = []
 
-        PEXELS_API_KEY = '563492ad6f91700001000001ecab8f7b0b9f4371b013fa9bc225c984'
-        api = API(PEXELS_API_KEY)
-        api.search('kitten', page=1, results_per_page=6)
-        images = api.get_entries()
+        # PEXELS_API_KEY = '563492ad6f91700001000001ecab8f7b0b9f4371b013fa9bc225c984'
+        # api = API(PEXELS_API_KEY)
+        # api.search('kitten', page=1, results_per_page=6)
+        # images = api.get_entries()
 
-        for img in images:
+        for img in range(6):
+        # for img in images:
 
             # url_1 = "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg"
-            # url_1 = "https://drive.google.com/uc?id=1FumEJWkRjQ6DA7UevruTgnuINlmKThmQ"
-            response = requests.get(img.original)
+            url_1 = "https://drive.google.com/uc?id=1FumEJWkRjQ6DA7UevruTgnuINlmKThmQ"
+            # response = requests.get(img.original)
+            response = requests.get(url_1)
 
-            im1 = Image.open(BytesIO(response.content)).resize((416, 416))
+            im1 = Image.open(BytesIO(response.content)).resize((600, 600))
             temp_images.append(im1)
 
 
@@ -157,11 +159,16 @@ class Box(tk.Frame):
         print("Arg = ", arg)
 
         image_window = tk.Toplevel(self)
-        image_window.geometry("500x500")
+        image_window.geometry("600x600")
         image_window.resizable(False, False)
 
         image_label = tk.Label(image_window, image=arg)
         image_label.grid(row=0, column=0)
+        image_label.bind("<Button-1>", lambda event, arg=image_window: self.close_image(event, arg))
+
+    def close_image(self, event, arg):
+        arg.destroy()
+
 
 
 
