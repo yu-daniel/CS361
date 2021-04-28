@@ -170,7 +170,8 @@ class Box(tk.Frame):
             self.images_canvas[x].create_image(0, 0, image=self.img)
             self.images_canvas[x].image = self.img
             self.images_canvas[x].bind("<Button-1>", lambda event, arg=self.images[x]: self.enlarge_images(event, arg))
-            self.images_canvas[x].bind("<Enter>", self.mouse_in)
+            # self.images_canvas[x].bind("<Enter>", self.mouse_in)
+            self.images_canvas[x].bind("<Enter>", lambda event, arg=self: self.mouse_in(event, arg))
 
     def enlarge_images(self, event, arg):
         print("Arg = ", arg)
@@ -182,14 +183,17 @@ class Box(tk.Frame):
         image_label = tk.Label(image_window, image=arg)
         image_label.grid(row=0, column=0)
         image_label.bind("<Button-1>", lambda event, arg=image_window: self.close_image(event, arg))
-        image_label.bind("<Enter>", self.mouse_in)
+        # image_label.bind("<Enter>", self.mouse_in)
+        image_label.bind("<Enter>", lambda event, arg=image_label: self.mouse_in(event, arg))
 
 
     def close_image(self, event, arg):
         arg.destroy()
 
-    def mouse_in(self, event):
-        self['cursor'] = "@icons8-hand-cursor-_2_.cur"
+    def mouse_in(self, event, widget):
+        print("This is the hand cursor.")
+        # self['cursor'] = "@icons8-hand-cursor-_2_.cur"
+        widget['cursor'] = "@icons8-hand-cursor-_2_.cur"
 
 
 class Messages:
