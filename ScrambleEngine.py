@@ -23,16 +23,18 @@ class Main(tk.Frame):
         self.messenger = Messages()
         self.status_message = self.messenger.default
 
-
-        # add buttons to the UI
-        self.news = tk.Button(self, text="News")
-        self.images = tk.Button(self, text="Images")
-        self.videos = tk.Button(self, text="Videos")
-        self.search_btn = tk.Button(self, text="Search")
-        self.bored = tk.Button(self, text="I'm Feeling Bored")
-
         # add status bar
         self.status = tk.Label(text=self.status_message, fg="#606060")
+
+
+        # add buttons to the UI
+        self.news = ColorButtons(self, text="News", message="This is the News button!", status_bar=self.status)
+        self.images = ColorButtons(self, text="Images", message="This is the Images button!", status_bar=self.status)
+        self.videos = ColorButtons(self, text="Videos", message="This is the Videos button!", status_bar=self.status)
+        self.search_btn = ColorButtons(self, text="Search", message="This is the Search button!", status_bar=self.status)
+        self.bored = ColorButtons(self, text="I'm Feeling Bored", message='This is the "Random" button!', status_bar=self.status)
+
+
 
         # add search field
         self.search = tk.Entry(self, width=100, fg="#606060")
@@ -204,6 +206,30 @@ class Messages:
         self.current = widget
 
 
+class ColorButtons(tk.Button):
+    def __init__(self, event, message, status_bar, **kw):        # kw for all extra arguments
+        tk.Button.__init__(self, event, **kw)
+        self.status_bar = status_bar
+        self.defaultBackground = self["background"]
+        self.status_message = ""
+        self.bind("<Enter>", self.mouse_in)
+        self.bind("<Leave>", self.mouse_out)
+
+        self.bind("<Enter>", lambda event, arg=message: self.update_message(arg))
+        self.bind("<Leave>", lambda event, arg=self.status_message: self.update_message(arg))
+
+    def update_message(self, widget):
+        self.status_message = widget
+
+        self.status_bar.config(text=self.status_message)
+
+
+    def mouse_in(self, event):
+        self['background'] = '#E5F3FF'
+
+
+    def mouse_out(self, event):
+        self['background'] = self.defaultBackground
 
 
 if __name__ == '__main__':
