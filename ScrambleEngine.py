@@ -212,24 +212,21 @@ class ColorButtons(tk.Button):
         self.status_bar = status_bar
         self.defaultBackground = self["background"]
         self.status_message = ""
-        self.bind("<Enter>", self.mouse_in)
-        self.bind("<Leave>", self.mouse_out)
+        self.default = True
 
         self.bind("<Enter>", lambda event, arg=message: self.update_message(arg))
         self.bind("<Leave>", lambda event, arg=self.status_message: self.update_message(arg))
 
     def update_message(self, widget):
         self.status_message = widget
-
         self.status_bar.config(text=self.status_message)
 
-
-    def mouse_in(self, event):
-        self['background'] = '#E5F3FF'
-
-
-    def mouse_out(self, event):
-        self['background'] = self.defaultBackground
+        if self.default:
+            self['background'] = '#E5F3FF'
+            self.default = False
+        else:
+            self['background'] = self.defaultBackground
+            self.default = True
 
 
 if __name__ == '__main__':
