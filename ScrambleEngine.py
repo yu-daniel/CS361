@@ -22,7 +22,7 @@ class Main(tk.Frame):
         self.status_message = self.messenger.default
 
         # add status bar
-        self.status = tk.Label(text=self.status_message, fg="#606060")
+        self.status = tk.Label(text=self.status_message, fg="#606060", relief="groove", borderwidth=2)
 
         # add buttons to the UI
         self.news = ColorButtons(self, text="News", message="This is the News button!", status_bar=self.status)
@@ -178,17 +178,19 @@ class Main(tk.Frame):
 class Results(tk.Frame):
     def __init__(self):
         tk.Frame.__init__(self)
+        self['borderwidth'] = 1
+        self['relief'] = 'groove'
 
         # main canvas (red) that will hold all News search results (blue),
-        self.redCanvas = tk.Canvas(self, width=640, height=500, bg="red")
-        # self.redCanvas.config(highlightbackground="red")
+        self.redCanvas = tk.Canvas(self, width=640, height=500, bg="red", bd=0, highlightthickness=0)
+
 
         # create another canvas (blue) that'll hold search entries
-        self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450)
+        self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450, bg="#202020", bd=0, highlightthickness=0)
         self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=640)
 
         # create scrollbar & assign it to 'red' canvas
-        self.scrollbar = tk.Scrollbar(self, command=self.redCanvas.yview)
+        self.scrollbar = tk.Scrollbar(self, command=self.redCanvas.yview, orient=tk.VERTICAL)
         self.redCanvas.config(yscrollcommand=self.scrollbar.set)
 
         # position the 'red' frame and the scrollbar
@@ -199,6 +201,7 @@ class Results(tk.Frame):
         self.redCanvas.bind("<Configure>", self.update_scrollbar)
 
     def update_scrollbar(self, event):
+        # set scrolling region of the 'red' canvas
         self.redCanvas.configure(scrollregion=self.redCanvas.bbox("all"))
 
 
@@ -273,20 +276,39 @@ class Toolbar(tk.Menu):
 
         # file menu
         self.file = tk.Menu(self.menu, tearoff=0)
-        self.add_cascade(label="File")
+        self.add_cascade(label="File", menu=self.file)
+        self.file.add_command(label="Export", command=None)
+        self.file.add_command(label="Settings", command=None)
+        self.file.add_separator()
+        self.file.add_command(label="Exit", command=None)
+
+        self.edit = tk.Menu(self.menu, tearoff=0)
+        self.add_cascade(label="Edit", menu=self.edit)
+        self.edit.add_command(label="Copy", command=None)
+        self.edit.add_command(label="Paste", command=None)
+        self.edit.add_separator()
+        self.edit.add_command(label="Select All", command=None)
 
         # view menu
         self.view = tk.Menu(self.menu, tearoff=0)
-        self.add_cascade(label="View")
+        self.add_cascade(label="View", menu=self.view)
+        self.view.add_command(label="News", command=None)
+        self.view.add_command(label="Images", command=None)
+        self.view.add_command(label="Videos", command=None)
+        self.view.add_separator()
+        self.view.add_command(label="Tutorial", command=None)
 
         # help menu
         self.help = tk.Menu(self.menu, tearoff=0)
-        self.add_cascade(label="Help")
+        self.add_cascade(label="Help", menu=self.help)
+        self.help.add_command(label="Homepage", command=None)
+        self.help.add_separator()
+        self.help.add_command(label="About Scramble Engine", command=None)
 
 
 class Messages:
     def __init__(self):
-        self.default = ""
+        self.default = "System: " + " " * 204
         self.search_field = "This is the search field"
 
         self.current = self.default
