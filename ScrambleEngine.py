@@ -3,6 +3,7 @@ from pexels_api import API
 import requests
 from PIL import ImageTk, Image
 from io import BytesIO
+import random
 
 
 class Main(tk.Frame):
@@ -35,6 +36,8 @@ class Main(tk.Frame):
                                        status_bar=self.status)
         self.bored = ColorButtons(self, text="I'm Feeling Bored", message='This is the "Random" button!',
                                   status_bar=self.status)
+
+        self.bored.bind("<Button-1>", self.random_search)
 
         # RESULTS AREA
         self.container = tk.Frame(self, bg="black")
@@ -86,7 +89,6 @@ class Main(tk.Frame):
             root.focus()
 
     def click_search(self, event):
-        # print("Search button pressed.")
         placeholder = self.search.get()
 
         if placeholder == "Enter <keyword> to search...":
@@ -103,9 +105,25 @@ class Main(tk.Frame):
             self.search.insert(0, "Enter <keyword> to search...")
             root.focus()
 
+    def random_search(self, event):
+        # before hooking up with a microservice as a source for keywords,
+        # we'll just create our own sample for now...
+        sample = ['Microsoft', 'Bitcoin', 'Amazon', 'YouTube',
+                  'Apple', 'Ethereum', 'Nvidia', 'Pepsi']
+        num = random.randint(0, len(sample) - 1)
+
+        # self.search.delete(0, tk.END)
+        # self.search.insert(0, sample[num])
+        print(num)
+        keyword = sample[num]
+        print("keyword = ", keyword)
+
+        # self.image_api(keyword)
+        # self.news_api(keyword)
+
     def news_api(self, keyword):
         key = 'dde38eb277ba442caaaa89a152952773'
-        url = 'https://newsapi.org/v2/everything?q=' + 'bitcoin' + '&apiKey=' + 'dde38eb277ba442caaaa89a152952773'
+        url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + 'dde38eb277ba442caaaa89a152952773'
 
         temp_news = []
 
@@ -123,7 +141,7 @@ class Main(tk.Frame):
 
         PEXELS_API_KEY = '563492ad6f91700001000001ecab8f7b0b9f4371b013fa9bc225c984'
         api = API(PEXELS_API_KEY)
-        api.search('kitten', page=1, results_per_page=6)
+        api.search(keyword, page=1, results_per_page=6)
         images = api.get_entries()
 
         # for img in range(6):
