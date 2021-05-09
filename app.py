@@ -2,6 +2,7 @@ import requests
 from flask import Flask
 from bs4 import BeautifulSoup
 import json
+import re
 
 app = Flask(__name__)
 
@@ -48,7 +49,13 @@ def scraper(route, method):
             target_paragraph += 1
 
         first_paragraph = BeautifulSoup(str(body[target_paragraph]), features="html.parser")
-        final_text = first_paragraph.find('p').getText()  # text is now a string
+        final_text = first_paragraph.find('p').get_text()  # text is now a string
+
+
+        target = "\[[^[]*\]"
+        final_text = re.sub(target, "", final_text)
+        final_text = re.sub("\n", "", final_text)
+
 
         data = {"title": route, "content": final_text}
         json_data = json.dumps(data)

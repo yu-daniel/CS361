@@ -357,10 +357,6 @@ class Toolbar(tk.Menu):
         self.help.add_command(label="About Scramble Engine", command=None)
 
 
-
-
-
-
 class Messages:
     def __init__(self):
         self.default = "Status: "
