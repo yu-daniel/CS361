@@ -12,6 +12,7 @@ class Main(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
         self.grid()  # using Tkinter's grid system over pack
+        self.language = "en"
 
         # add access to status messages
         self.messenger = Messages()
@@ -26,9 +27,6 @@ class Main(tk.Frame):
         self.status_bar = tk.Canvas(master=self.status_container, width=652, height=15)
         # self.status = tk.Label(self.status_container2, text=self.status_message, fg="#606060")
         self.status = self.status_bar.create_text(10, 0, anchor="nw", text=self.status_message, fill="#606060")
-
-
-
 
         # add buttons to the UI
         self.news = ColorButtons(self, text="News", message="System: search <keyword> for the latest news articles.",
@@ -82,6 +80,12 @@ class Main(tk.Frame):
         self.status_container.grid(row=4, column=0, columnspan=102, sticky=tk.SW, padx=(10, 0), pady=(5, 5))
         self.status_bar.grid(row=0, column=0, columnspan=102, sticky=tk.SW, padx=(0, 0), pady=(0, 0))
 
+    def get_language(self):
+        print("Hello!")
+        return self.language
+
+    def set_language(self, language):
+        self.language = language
 
     def search_text(self, event):
         placeholder = self.search.get()
@@ -133,7 +137,8 @@ class Main(tk.Frame):
 
     def news_api(self, keyword):
         key = 'dde38eb277ba442caaaa89a152952773'
-        url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key
+        # url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key
+        url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key + '&language=' + self.language
 
         temp_news = []
 
@@ -233,29 +238,45 @@ class NewsResults(Results):
             self.news_canvas.append(news)
 
     def set_news(self, news_list):
+        categories = ['title', 'publishedAt', 'author', 'description']
+
+
         if len(self.canvas_objs) != 0:
             for canvas in self.news_canvas:
                 for x in range(4):
                     canvas.delete(self.canvas_objs.pop(0))
 
         for x in range(len(news_list)):
-            date_str = news_list[x]['publishedAt']
-            date = parser.parse(date_str).date()
+            content = []
+
+            # date_str = news_list[x]['publishedAt']
+            # date = parser.parse(date_str).date()
+
+            for y in categories:
+                data = news_list[x][y]
+                if data is None:
+                    data = 'N/A'
+
+                elif y == 'publishedAt':
+                    data = parser.parse(data).date()
+
+                content.append(data)
+
 
             # add title
-            title = self.news_canvas[x].create_text(5, 25, text=news_list[x]['title'], anchor='nw', width=600,
+            title = self.news_canvas[x].create_text(5, 25, text=content[0], anchor='nw', width=600,
                                             fill="white", font=("Candara", 12, "bold"))
 
             # date
-            date = self.news_canvas[x].create_text(5, 50, text=date, anchor='nw', width=600,
+            date = self.news_canvas[x].create_text(5, 50, text=content[1], anchor='nw', width=600,
                                             fill="#99FF33", font=("Candara", 12, "normal"))
 
             # add source
-            source = self.news_canvas[x].create_text(5, 75, text="Source: " + news_list[x]['author'], anchor='nw', width=600,
+            source = self.news_canvas[x].create_text(5, 75, text="Source: " + content[2], anchor='nw', width=600,
                                             fill="#99FF33", font=("Candara", 12, "normal"))
 
             # add content
-            content = self.news_canvas[x].create_text(5, 125, text=news_list[x]['description'], anchor='nw', width=600,
+            content = self.news_canvas[x].create_text(5, 125, text=content[3], anchor='nw', width=600,
                                             fill="white")
 
             items = [title, date, source, content]
@@ -321,17 +342,22 @@ class ImageResults(Results):
 
 
 class Toolbar(tk.Menu):
-    def __init__(self, event):
-        super().__init__(event)
+    def __init__(self, root):
+        super().__init__(root)
         self.menu = tk.Menu(self)
+        self.root = root
 
         # file menu
         self.file = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="File", menu=self.file)
         self.file.add_command(label="Export", command=None)
-        self.file.add_command(label="Settings", command=None)
+        # self.file.add_command(label="Settings", command=None)
+        self.setting = tk.Menu(self.menu, tearoff=0)
+        self.setting.add_separator()
+        self.file.add_cascade(label="Settings", menu=self.setting)
+
         self.file.add_separator()
-        self.file.add_command(label="Exit", command=None)
+        self.file.add_command(label="Exit", command=self.exit)
 
         self.edit = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Edit", menu=self.edit)
@@ -349,13 +375,67 @@ class Toolbar(tk.Menu):
         self.view.add_separator()
         self.view.add_command(label="Tutorial", command=None)
 
+        # advanced menu
+        self.themes_var = tk.StringVar()
+        self.languages = tk.StringVar()
+        self.themes_var.set(1)
+        self.languages.set(1)
+
+        self.advanced = tk.Menu(self.menu, tearoff=0)
+        self.add_cascade(label="Advanced", menu=self.advanced)
+
+        self.themes = tk.Menu(self.advanced, tearoff=0)
+
+        self.advanced.add_cascade(label="Location", menu=self.themes)
+        countries = ["All", "Australia", "Brazil", "Canada", "China", "Germany", "United Kingdom", "Hong Kong",
+                     "Israel", "India", "Italy", "Japan", "South Korea", "Mexico", "Malaysia", "Russia",
+                     "Saudi Arabia", "Singapore", "Thailand", "Taiwan", "United States"]
+
+        for x in range(len(countries)):
+            self.themes.add_radiobutton(label=countries[x], value=x+1, variable=self.themes_var)
+
+        # self.themes.add_radiobutton(label="All", value=1, variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Australia", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Brazil", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Canada", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="China", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Germany", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="United Kingdom", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Hong Kong", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Israel", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="India", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Italy", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Japan", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="South Korea", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Mexico", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Malaysia", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Russia", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Saudi Arabia", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Singapore", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Thailand", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="Taiwan", variable=self.themes_var)
+        # self.themes.add_radiobutton(label="United States", variable=self.themes_var)
+
+
+
+        self.advanced.add_separator()
+        self.advanced.add_radiobutton(label="English", variable=self.languages, value=1, command=lambda: self.set_language("en"))
+        self.advanced.add_radiobutton(label="Español", variable=self.languages,  command=lambda: self.set_language("es"))
+        self.advanced.add_radiobutton(label="中文", variable=self.languages,  command=lambda: self.set_language("zh"))
+
         # help menu
         self.help = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Help", menu=self.help)
         self.help.add_command(label="Homepage", command=None)
         self.help.add_separator()
-        self.help.add_command(label="About Scramble Engine", command=None)
+        self.help.add_command(label="About...", command=None)
 
+    def set_language(self, language):
+        self.root.set_language(language)
+        print('Hello to you too!', self.root.get_language())
+
+    def exit(self):
+        self.root.quit()
 
 class Messages:
     def __init__(self):
