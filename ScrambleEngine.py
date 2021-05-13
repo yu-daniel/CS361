@@ -249,8 +249,13 @@ class NewsResults(Results):
     def __init__(self, root):
         Results.__init__(self, root)
 
+        self.news = []
+
         self.news_canvas = []
         self.canvas_objs = []
+
+        self.start = 0
+        self.end = 6
 
         self.test = "This is NewsResults."
 
@@ -260,9 +265,17 @@ class NewsResults(Results):
             news.grid(row=i, column=0, sticky=tk.W, padx=(10, 15), pady=(10, 15))
             self.news_canvas.append(news)
 
-        root.back.bind()
+        root.back.bind("<Button-1>", lambda root: self.change_page())
+
+    def change_page(self):
+        print("Changing Page #")
+        self.start += 6
+        self.end += 6
+
+        self.set_news(self.news)
 
     def set_news(self, news_list):
+        self.news = news_list
         categories = ['title', 'publishedAt', 'author', 'description']
 
         if len(self.canvas_objs) != 0:
@@ -277,7 +290,7 @@ class NewsResults(Results):
             # date = parser.parse(date_str).date()
 
             for y in categories:
-                data = news_list[x][y]
+                data = news_list[self.start + x][y]
                 if data is None:
                     data = 'N/A'
 
