@@ -34,13 +34,22 @@ class Main(tk.Frame):
         self.images = ColorButtons(self, text="Images", message="System: explore current images for <keyword>.",
                                    status_container=self.status_bar, status_msg=self.status)
 
+        self.back = ColorButtons(self, text="Previous", message="System: navigate to the previous search page.",
+                                 status_container=self.status_bar, status_msg=self.status)
+
+        self.forward = ColorButtons(self, text="Next", message="System: navigate to the next search page.",
+                                    status_container=self.status_bar, status_msg=self.status)
+
         self.news.bind("<Button-1>", lambda arg=0: self.switch_page(0))
         self.images.bind("<Button-1>", lambda arg=1: self.switch_page(1))
 
-        self.videos = ColorButtons(self, text="Videos", message="System: view latest videos for <keyword>.", status_container=self.status_bar, status_msg=self.status)
-        self.search_btn = ColorButtons(self, text="Search", message="Initiate a search query for <keyword>.", status_container=self.status_bar,
+        self.videos = ColorButtons(self, text="Videos", message="System: view latest videos for <keyword>.",
+                                   status_container=self.status_bar, status_msg=self.status)
+        self.search_btn = ColorButtons(self, text="Search", message="Initiate a search query for <keyword>.",
+                                       status_container=self.status_bar,
                                        status_msg=self.status)
-        self.bored = ColorButtons(self, text="I'm Feeling Bored", message="No idea what to search for? Let me help!", status_container=self.status_bar,
+        self.bored = ColorButtons(self, text="I'm Feeling Bored", message="No idea what to search for? Let me help!",
+                                  status_container=self.status_bar,
                                   status_msg=self.status)
 
         self.bored.bind("<Button-1>", self.random_search)
@@ -48,10 +57,15 @@ class Main(tk.Frame):
         # RESULTS AREA
         self.container = tk.Frame(self, bg="black")
 
-        self.image_results = ImageResults()
-        self.news_results = NewsResults()
+        self.back.grid(row=0, column=4, sticky=tk.W, padx=3, pady=7)
+        self.forward.grid(row=0, column=5, sticky=tk.W, padx=3, pady=7)
 
-        self.frames = [self.news_results, self.image_results]
+
+        self.image_results = ImageResults(self)
+        self.news_results = NewsResults(self)
+
+
+
 
         # add search field
         self.search = tk.Entry(self, width=100, fg="#606060")
@@ -68,21 +82,20 @@ class Main(tk.Frame):
         self.videos.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
         self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
 
+
+
         # add search field, search button, and search results position
         self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
         self.search_btn.grid(row=1, column=101, sticky=tk.W, padx=(0, 10))
-        self.container.grid(row=2, column=0, columnspan=102, sticky=tk.W, padx=(10, 0), pady=7)
 
-        self.news_results.grid(row=3, column=0)
-        self.image_results.grid(row=3, column=0)
+        # self.news_results.grid(row=3, column=0)
+        # self.image_results.grid(row=3, column=0)
 
         # position of status bar
         self.status_container.grid(row=4, column=0, columnspan=102, sticky=tk.SW, padx=(10, 0), pady=(5, 5))
         self.status_bar.grid(row=0, column=0, columnspan=102, sticky=tk.SW, padx=(0, 0), pady=(0, 0))
 
-    def get_language(self):
-        print("Hello!")
-        return self.language
+        self.frames = [self.news_results, self.image_results]
 
     def set_language(self, language):
         self.language = language
@@ -145,7 +158,9 @@ class Main(tk.Frame):
         response = requests.get(url)
         results = response.json()
 
-        for x in range(5):
+        print(len(results['articles']))
+
+        for x in range(len(results['articles']) - 1):
             temp_news.append(results['articles'][x])
 
         self.news_results.set_news(temp_news)
@@ -181,40 +196,45 @@ class Main(tk.Frame):
         self.status_bar.itemconfig(self.status, text=self.status_message)
 
     def switch_page(self, page):
+
         frame = self.frames[page]
         # print("switch to: ", page, "frame = ", frame)
+
+
         if page == 0:
-            self.frames[1].grid_remove()
-            self.frames[0].grid()
+            self.frames[1].redCanvas.grid_remove()
+            self.frames[0].redCanvas.grid()
         else:
-            self.frames[0].grid_remove()
-            self.frames[1].grid()
+            self.frames[0].redCanvas.grid_remove()
+            self.frames[1].redCanvas.grid()
 
         frame.tkraise()
+
 
     def print_hi(self, event):
         print("Hi")
 
+
 class Results(tk.Frame):
-    def __init__(self):
-        tk.Frame.__init__(self)
+    def __init__(self, root):
+        tk.Frame.__init__(self, root)
         self['borderwidth'] = 1
         self['relief'] = 'groove'
 
         # main canvas (red) that will hold all News search results (blue),
-        self.redCanvas = tk.Canvas(self, width=640, height=500, bg="red", bd=0, highlightthickness=0)
+        self.redCanvas = tk.Canvas(root, width=640, height=500, bg="red", bd=0, highlightthickness=0)
 
         # create another canvas (blue) that'll hold search entries
         self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450, bg="#202020", bd=0, highlightthickness=0)
         self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=640)
 
         # create scrollbar & assign it to 'red' canvas
-        self.scrollbar = tk.Scrollbar(self, command=self.redCanvas.yview, orient=tk.VERTICAL)
+        self.scrollbar = tk.Scrollbar(root, command=self.redCanvas.yview, orient=tk.VERTICAL)
         self.redCanvas.config(yscrollcommand=self.scrollbar.set)
 
         # position the 'red' frame and the scrollbar
-        self.redCanvas.grid(row=0, column=0, sticky=tk.NW)
-        self.scrollbar.grid(row=0, column=1, sticky=tk.NS)
+        self.redCanvas.grid(row=2, column=0, columnspan=102, sticky=tk.NW, padx=(10, 0), pady=7)
+        self.scrollbar.grid(row=2, column=101, columnspan=102, sticky=tk.NS, padx=(10, 0), pady=7)
 
         # listen for events that would change the size or drag (i.e scroll) the 'blue' canvas
         self.redCanvas.bind("<Configure>", self.update_scrollbar)
@@ -224,29 +244,33 @@ class Results(tk.Frame):
         self.redCanvas.configure(scrollregion=self.redCanvas.bbox("all"))
 
 
+
 class NewsResults(Results):
-    def __init__(self):
-        Results.__init__(self)
+    def __init__(self, root):
+        Results.__init__(self, root)
 
         self.news_canvas = []
         self.canvas_objs = []
 
+        self.test = "This is NewsResults."
+
         # add search entries inside the 'blue' canvas
-        for i in range(5):
+        for i in range(6):
             news = tk.Canvas(self.blueCanvas, height=200, width=615, bg="black")
             news.grid(row=i, column=0, sticky=tk.W, padx=(10, 15), pady=(10, 15))
             self.news_canvas.append(news)
 
+        root.back.bind()
+
     def set_news(self, news_list):
         categories = ['title', 'publishedAt', 'author', 'description']
-
 
         if len(self.canvas_objs) != 0:
             for canvas in self.news_canvas:
                 for x in range(4):
                     canvas.delete(self.canvas_objs.pop(0))
 
-        for x in range(len(news_list)):
+        for x in range(6):
             content = []
 
             # date_str = news_list[x]['publishedAt']
@@ -262,22 +286,21 @@ class NewsResults(Results):
 
                 content.append(data)
 
-
             # add title
             title = self.news_canvas[x].create_text(5, 25, text=content[0], anchor='nw', width=600,
-                                            fill="white", font=("Candara", 12, "bold"))
+                                                    fill="white", font=("Candara", 12, "bold"))
 
             # date
             date = self.news_canvas[x].create_text(5, 50, text=content[1], anchor='nw', width=600,
-                                            fill="#99FF33", font=("Candara", 12, "normal"))
+                                                   fill="#99FF33", font=("Candara", 12, "normal"))
 
             # add source
             source = self.news_canvas[x].create_text(5, 75, text="Source: " + content[2], anchor='nw', width=600,
-                                            fill="#99FF33", font=("Candara", 12, "normal"))
+                                                     fill="#99FF33", font=("Candara", 12, "normal"))
 
             # add content
             content = self.news_canvas[x].create_text(5, 125, text=content[3], anchor='nw', width=600,
-                                            fill="white")
+                                                      fill="white")
 
             items = [title, date, source, content]
             for y in items:
@@ -299,8 +322,8 @@ class NewsResults(Results):
 
 
 class ImageResults(Results):
-    def __init__(self):
-        Results.__init__(self)
+    def __init__(self, root):
+        Results.__init__(self, root)
 
         self.images = []
         self.images_canvas = []
@@ -392,36 +415,13 @@ class Toolbar(tk.Menu):
                      "Saudi Arabia", "Singapore", "Thailand", "Taiwan", "United States"]
 
         for x in range(len(countries)):
-            self.themes.add_radiobutton(label=countries[x], value=x+1, variable=self.themes_var)
-
-        # self.themes.add_radiobutton(label="All", value=1, variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Australia", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Brazil", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Canada", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="China", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Germany", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="United Kingdom", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Hong Kong", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Israel", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="India", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Italy", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Japan", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="South Korea", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Mexico", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Malaysia", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Russia", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Saudi Arabia", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Singapore", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Thailand", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="Taiwan", variable=self.themes_var)
-        # self.themes.add_radiobutton(label="United States", variable=self.themes_var)
-
-
+            self.themes.add_radiobutton(label=countries[x], value=x + 1, variable=self.themes_var)
 
         self.advanced.add_separator()
-        self.advanced.add_radiobutton(label="English", variable=self.languages, value=1, command=lambda: self.set_language("en"))
-        self.advanced.add_radiobutton(label="Español", variable=self.languages,  command=lambda: self.set_language("es"))
-        self.advanced.add_radiobutton(label="中文", variable=self.languages,  command=lambda: self.set_language("zh"))
+        self.advanced.add_radiobutton(label="English", variable=self.languages, value=1,
+                                      command=lambda: self.set_language("en"))
+        self.advanced.add_radiobutton(label="Español", variable=self.languages, command=lambda: self.set_language("es"))
+        self.advanced.add_radiobutton(label="中文", variable=self.languages, command=lambda: self.set_language("zh"))
 
         # help menu
         self.help = tk.Menu(self.menu, tearoff=0)
@@ -432,10 +432,10 @@ class Toolbar(tk.Menu):
 
     def set_language(self, language):
         self.root.set_language(language)
-        print('Hello to you too!', self.root.get_language())
 
     def exit(self):
         self.root.quit()
+
 
 class Messages:
     def __init__(self):
@@ -448,6 +448,7 @@ class Messages:
 
     def set_current(self, widget):
         self.current = widget
+
 
 class ColorButtons(tk.Button):
     def __init__(self, event, message, status_container, status_msg, **kw):  # kw for all extra arguments
