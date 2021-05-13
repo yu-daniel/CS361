@@ -65,8 +65,6 @@ class Main(tk.Frame):
         self.news_results = NewsResults(self)
 
 
-
-
         # add search field
         self.search = tk.Entry(self, width=100, fg="#606060")
         self.search.insert(0, "Enter <keyword> to search...")
@@ -124,8 +122,9 @@ class Main(tk.Frame):
             # print("keyword = ", keyword)
 
             # find images for the search
-            self.image_api(keyword)
             self.news_api(keyword)
+            self.image_api(keyword)
+
 
             self.search.delete(0, tk.END)
             self.search.insert(0, "Enter <keyword> to search...")
@@ -202,17 +201,19 @@ class Main(tk.Frame):
 
 
         if page == 0:
+            # print(self.frames[0], self.frames[1])
             self.frames[1].redCanvas.grid_remove()
+            self.frames[1].scrollbar.grid_remove()
             self.frames[0].redCanvas.grid()
+            self.frames[0].scrollbar.grid()
         else:
+            # print(self.frames[0], self.frames[1])
             self.frames[0].redCanvas.grid_remove()
+            self.frames[0].scrollbar.grid_remove()
             self.frames[1].redCanvas.grid()
+            self.frames[1].scrollbar.grid()
 
         frame.tkraise()
-
-
-    def print_hi(self, event):
-        print("Hi")
 
 
 class Results(tk.Frame):
@@ -260,19 +261,27 @@ class NewsResults(Results):
         self.test = "This is NewsResults."
 
         # add search entries inside the 'blue' canvas
-        for i in range(6):
+        for i in range(5):
             news = tk.Canvas(self.blueCanvas, height=200, width=615, bg="black")
             news.grid(row=i, column=0, sticky=tk.W, padx=(10, 15), pady=(10, 15))
             self.news_canvas.append(news)
 
-        root.back.bind("<Button-1>", lambda root: self.change_page())
+        root.forward.bind("<Button-1>", lambda root: self.increase_page(5, True))
+        root.back.bind("<Button-1>", lambda root: self.increase_page(-5, False))
 
-    def change_page(self):
-        print("Changing Page #")
-        self.start += 6
-        self.end += 6
+    def increase_page(self, num, increase):
+        if self.end <= 15 and increase is True:
+            self.start += num
+            self.end += num
 
-        self.set_news(self.news)
+            self.set_news(self.news)
+
+        elif self.start > 0 and increase is False:
+            self.start += num
+            self.end += num
+
+            self.set_news(self.news)
+
 
     def set_news(self, news_list):
         self.news = news_list
@@ -283,7 +292,7 @@ class NewsResults(Results):
                 for x in range(4):
                     canvas.delete(self.canvas_objs.pop(0))
 
-        for x in range(6):
+        for x in range(5):
             content = []
 
             # date_str = news_list[x]['publishedAt']
