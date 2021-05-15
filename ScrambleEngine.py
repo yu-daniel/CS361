@@ -14,6 +14,7 @@ class Main(tk.Frame):
         self.grid()  # using Tkinter's grid system over pack
         self.language = "en"
 
+
         # add access to status messages
         self.messenger = Messages()
         self.status_message = self.messenger.default
@@ -95,6 +96,7 @@ class Main(tk.Frame):
 
         self.frames = [self.news_results, self.image_results]
 
+
     def set_language(self, language):
         self.language = language
 
@@ -138,9 +140,6 @@ class Main(tk.Frame):
 
         num = random.randint(0, len(sample) - 1)
 
-        # self.search.delete(0, tk.END)
-        # self.search.insert(0, sample[num])
-        # print(num)
         keyword = sample[num]
         print("keyword = ", keyword)
 
@@ -243,7 +242,6 @@ class Results(tk.Frame):
     def update_scrollbar(self, event):
         # set scrolling region of the 'red' canvas
         self.redCanvas.configure(scrollregion=self.redCanvas.bbox("all"))
-
 
 
 class NewsResults(Results):
@@ -418,7 +416,7 @@ class Toolbar(tk.Menu):
         self.view.add_command(label="Images", command=None)
         self.view.add_command(label="Videos", command=None)
         self.view.add_separator()
-        self.view.add_command(label="Tutorial", command=None)
+        self.view.add_command(label="Tutorial", command=self.show_tutorial)
 
         # advanced menu
         self.themes_var = tk.StringVar()
@@ -451,6 +449,10 @@ class Toolbar(tk.Menu):
         self.help.add_command(label="Homepage", command=None)
         self.help.add_separator()
         self.help.add_command(label="About...", command=None)
+
+    def show_tutorial(self):
+        # add tutorial
+        Tutorial(self.root)
 
     def set_language(self, language):
         self.root.set_language(language)
@@ -486,7 +488,6 @@ class ColorButtons(tk.Button):
 
     def update_message(self, widget):
         self.status_message = widget
-        # self.status_bar.config(text=self.status_message)
         self.status_container.itemconfig(self.status, text=self.status_message)
 
         if self.default:
@@ -497,10 +498,66 @@ class ColorButtons(tk.Button):
             self.default = True
 
 
+class Tutorial(tk.Toplevel):
+    def __init__(self, root):
+        tk.Toplevel.__init__(self, root)
+
+        # find parent window's position
+        x = root.winfo_x() + 250
+        y = root.winfo_y() + 230
+
+        # (width)x(height)+(x-position)+(y-position)
+        self.geometry("500x350+{x}+{y}".format(x=x, y=y))
+
+        self.resizable(False, False)
+        self.transient(root)
+
+        self.main = tk.Frame(self, bg="#202020")
+        self.main.grid(row=0, column=0)
+
+        self.bg = tk.Canvas(self.main, width=500, height=350, bg="green", bd=0, highlightthickness=0)
+        self.bg.grid(row=0, column=0, columnspan=3)
+
+        self.cancel = ColorButtons(self.main, "Exit tutorial.", root.status_bar, root.status, text="Ok")
+        self.cancel.grid(row=0, column=2, sticky=tk.S)
+
+        self.next = ColorButtons(self.main, "Next tip.", root.status_bar, root.status, text="Next")
+        self.next.grid(row=0, column=1, sticky=tk.S)
+
+        self.previous = ColorButtons(self.main, "Previous tip.", root.status_bar, root.status, text="Previous")
+        self.previous.grid(row=0, column=0, sticky=tk.S)
+
+        self.count = 1
+        front_img = 'test1.jpg'
+
+        self.img = ImageTk.PhotoImage(Image.open(front_img).resize((500, 350)))
+        self.bg.background = self.img
+        self.bg_image = self.bg.create_image(0, 0, anchor=tk.NW, image=self.img)
+
+        self.cancel.bind("<Button-1>", lambda event, root=self: self.close(root))
+        self.next.bind("<Button-1>", lambda event, root=self, increase=True: self.change_tip(root, increase))
+        self.previous.bind("<Button-1>", lambda event, root=self, increase=False: self.change_tip(root, increase))
+
+
+    def close(self, root):
+        root.destroy()
+
+    def change_tip(self, root, increase):
+        if self.count < 6 and increase is True:
+            self.count += 1
+        elif self.count > 1 and increase is False:
+            self.count -= 1
+
+        img2 = 'test{num}.jpg'.format(num=self.count)
+        self.img = ImageTk.PhotoImage(Image.open(img2).resize((500, 350)))
+        self.bg.itemconfig(self.bg_image, image=self.img)
+
+
+
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title("Scramble Engine")  # add title to the app
-    root.resizable(False, False)  # don't allow resizing window
+    root.title("Scramble Engine")   # add title to the app
+    root.resizable(False, False)    # don't allow resizing window
     root.geometry("680x620")
-    app = Main(root)  # initiate the main interface
-    root.mainloop()  # keep Tkinter running
+    app = Main(root)                # initiate the main interface
+    root.mainloop()                 # keep Tkinter running
