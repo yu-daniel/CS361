@@ -81,14 +81,9 @@ class Main(tk.Frame):
         self.videos.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
         self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
 
-
-
         # add search field, search button, and search results position
         self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
         self.search_btn.grid(row=1, column=101, sticky=tk.W, padx=(0, 10))
-
-        # self.news_results.grid(row=3, column=0)
-        # self.image_results.grid(row=3, column=0)
 
         # position of status bar
         self.status_container.grid(row=4, column=0, columnspan=102, sticky=tk.SW, padx=(10, 0), pady=(5, 5))
@@ -121,12 +116,10 @@ class Main(tk.Frame):
             return
         else:
             keyword = self.search.get()
-            # print("keyword = ", keyword)
 
             # find images for the search
             self.news_api(keyword)
             self.image_api(keyword)
-
 
             self.search.delete(0, tk.END)
             self.search.insert(0, "Enter <keyword> to search...")
@@ -148,7 +141,6 @@ class Main(tk.Frame):
 
     def news_api(self, keyword):
         key = 'dde38eb277ba442caaaa89a152952773'
-        # url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key
         url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key + '&language=' + self.language
 
         temp_news = []
@@ -173,12 +165,7 @@ class Main(tk.Frame):
 
         # for img in range(6):
         for img in images:
-            # url_1 = "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg"
-            # url_1 = "https://drive.google.com/uc?id=1FumEJWkRjQ6DA7UevruTgnuINlmKThmQ"
             response = requests.get(img.original)
-            # response = requests.get(url_1)
-
-            # im1 = Image.open(BytesIO(response.content)).resize((600, 600))
             im1 = Image.open(BytesIO(response.content))
             im1.thumbnail((800, 800))
             temp_images.append(im1)
@@ -187,26 +174,18 @@ class Main(tk.Frame):
 
     def update_message(self, widget):
         self.messenger.set_current(widget)
-
         self.status_message = self.messenger.get_current()
-
-        # self.status.config(text=self.status_message)
         self.status_bar.itemconfig(self.status, text=self.status_message)
 
     def switch_page(self, page):
 
         frame = self.frames[page]
-        # print("switch to: ", page, "frame = ", frame)
-
-
         if page == 0:
-            # print(self.frames[0], self.frames[1])
             self.frames[1].redCanvas.grid_remove()
             self.frames[1].scrollbar.grid_remove()
             self.frames[0].redCanvas.grid()
             self.frames[0].scrollbar.grid()
         else:
-            # print(self.frames[0], self.frames[1])
             self.frames[0].redCanvas.grid_remove()
             self.frames[0].scrollbar.grid_remove()
             self.frames[1].redCanvas.grid()
@@ -249,14 +228,10 @@ class NewsResults(Results):
         Results.__init__(self, root)
 
         self.news = []
-
         self.news_canvas = []
         self.canvas_objs = []
-
         self.start = 0
         self.end = 6
-
-        self.test = "This is NewsResults."
 
         # add search entries inside the 'blue' canvas
         for i in range(5):
@@ -271,13 +246,11 @@ class NewsResults(Results):
         if self.end <= 15 and increase is True:
             self.start += num
             self.end += num
-
             self.set_news(self.news)
 
         elif self.start > 0 and increase is False:
             self.start += num
             self.end += num
-
             self.set_news(self.news)
 
 
@@ -293,17 +266,12 @@ class NewsResults(Results):
         for x in range(5):
             content = []
 
-            # date_str = news_list[x]['publishedAt']
-            # date = parser.parse(date_str).date()
-
             for y in categories:
                 data = news_list[self.start + x][y]
                 if data is None:
                     data = 'N/A'
-
                 elif y == 'publishedAt':
                     data = parser.parse(data).date()
-
                 content.append(data)
 
             # add title
@@ -327,7 +295,6 @@ class NewsResults(Results):
                 self.canvas_objs.append(y)
 
             self.news_canvas[x].grid(row=x)
-
             self.news_canvas[x].bind("<Button-1>", lambda event, arg=news_list[x]['url']: self.open_article(event, arg))
             self.news_canvas[x].bind("<Enter>", lambda event, arg=self.news_canvas[x]: self.mouse_in(event, arg))
 
@@ -363,7 +330,6 @@ class ImageResults(Results):
             # current not using self.images for any purpose, but later on it might be useful for 'history' features
             self.images.append(img)
             self.images_canvas[x].create_image(0, 0, image=img)
-            # self.images_canvas[x].image = self.img
             self.images_canvas[x].bind("<Button-1>", lambda event, arg=img: self.enlarge_images(event, arg))
             self.images_canvas[x].bind("<Enter>", lambda event, arg=self.images_canvas[x]: self.mouse_in(event, arg))
 
