@@ -14,20 +14,22 @@ class Main(tk.Frame):
         self.grid()  # using Tkinter's grid system over pack
         self.language = "en"
 
-
         # add access to status messages
         self.messenger = Messages()
         self.status_message = self.messenger.default
 
-        # initiate the main toolbar
-        self.toolbar = Toolbar(self)
-        root.config(menu=self.toolbar)
+
 
         # add status bar
         self.status_container = tk.Frame(relief="groove", borderwidth="2")
         self.status_bar = tk.Canvas(master=self.status_container, width=652, height=15)
         # self.status = tk.Label(self.status_container2, text=self.status_message, fg="#606060")
         self.status = self.status_bar.create_text(10, 0, anchor="nw", text=self.status_message, fill="#606060")
+
+        # initiate the main toolbar
+
+        self.toolbar = Toolbar(self)
+        root.config(menu=self.toolbar)
 
         # add buttons to the UI
         self.news = ColorButtons(self, text="News", message="System: search <keyword> for the latest news articles.",
@@ -44,8 +46,7 @@ class Main(tk.Frame):
         self.news.bind("<Button-1>", lambda arg=0: self.switch_page(0))
         self.images.bind("<Button-1>", lambda arg=1: self.switch_page(1))
 
-        self.videos = ColorButtons(self, text="Videos", message="System: view latest videos for <keyword>.",
-                                   status_container=self.status_bar, status_msg=self.status)
+
         self.search_btn = ColorButtons(self, text="Search", message="Initiate a search query for <keyword>.",
                                        status_container=self.status_bar,
                                        status_msg=self.status)
@@ -61,10 +62,8 @@ class Main(tk.Frame):
         self.back.grid(row=0, column=4, sticky=tk.W, padx=3, pady=7)
         self.forward.grid(row=0, column=5, sticky=tk.W, padx=3, pady=7)
 
-
         self.image_results = ImageResults(self)
         self.news_results = NewsResults(self)
-
 
         # add search field
         self.search = tk.Entry(self, width=100, fg="#606060")
@@ -78,15 +77,14 @@ class Main(tk.Frame):
         # position of objects (buttons, search entry, labels)
         self.news.grid(row=0, column=0, sticky=tk.W, padx=(10, 3), pady=7)
         self.images.grid(row=0, column=1, sticky=tk.W, padx=3, pady=7)
-        self.videos.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
-        self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
+        self.bored.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
 
         # add search field, search button, and search results position
         self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
         self.search_btn.grid(row=1, column=101, sticky=tk.W, padx=(0, 10))
 
         # position of status bar
-        self.status_container.grid(row=4, column=0, columnspan=102, sticky=tk.SW, padx=(10, 0), pady=(5, 5))
+        self.status_container.grid(row=3, column=0, columnspan=102, sticky=tk.SW, padx=(10, 0), pady=(5, 5))
         self.status_bar.grid(row=0, column=0, columnspan=102, sticky=tk.SW, padx=(0, 0), pady=(0, 0))
 
         self.frames = [self.news_results, self.image_results]
@@ -116,6 +114,8 @@ class Main(tk.Frame):
             return
         else:
             keyword = self.search.get()
+
+            self.toolbar.add_search_history(keyword)
 
             # find images for the search
             self.news_api(keyword)
@@ -356,6 +356,8 @@ class Toolbar(tk.Menu):
         self.menu = tk.Menu(self)
         self.root = root
 
+        self.search_history = []
+
         # file menu
         self.file = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="File", menu=self.file)
@@ -363,6 +365,7 @@ class Toolbar(tk.Menu):
         # self.file.add_command(label="Settings", command=None)
         self.setting = tk.Menu(self.menu, tearoff=0)
         self.setting.add_separator()
+        self.setting.add_command(label="Clear History", command=self.confirm)
         self.file.add_cascade(label="Settings", menu=self.setting)
 
         self.file.add_separator()
@@ -378,9 +381,10 @@ class Toolbar(tk.Menu):
         # view menu
         self.view = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="View", menu=self.view)
-        self.view.add_command(label="News", command=None)
-        self.view.add_command(label="Images", command=None)
-        self.view.add_command(label="Videos", command=None)
+
+        self.searches = tk.Menu(self.view, tearoff=0)
+
+        self.view.add_cascade(label="Search History", menu=self.searches)
         self.view.add_separator()
         self.view.add_command(label="Tutorial", command=self.show_tutorial)
 
@@ -422,6 +426,45 @@ class Toolbar(tk.Menu):
 
     def set_language(self, language):
         self.root.set_language(language)
+
+    def add_search_history(self, keyword):
+        self.search_history.append(keyword)
+
+        self.searches.add_command(label=keyword, command=None)
+
+    def confirm(self):
+        confirm_screen = tk.Toplevel(self)
+        x = self.root.winfo_x() + 250
+        y = self.root.winfo_y() + 330
+
+        confirm_screen.geometry("175x50+{x}+{y}".format(x=x, y=y))
+        confirm_screen.resizable(False, False)
+        confirm_screen.transient(self.root)
+
+        frame = tk.Frame(confirm_screen)
+        frame.grid(row=0, column=0)
+
+        label = tk.Label(frame, text="Ready to clear all search history?")
+        label.grid(row=0, column=0, columnspan=2)
+
+        cancel = ColorButtons(frame, "Cancel operation.", self.root.status_bar, self.root.status, text="Cancel")
+        cancel.bind("<Button-1>", lambda event, screen=confirm_screen: self.cancel(screen))
+        cancel.grid(row=1, column=0, sticky=tk.SW, padx=(10, 0), pady=0)
+
+        ok = ColorButtons(frame, "Confirm operation.", self.root.status_bar, self.root.status, text="Confirm")
+        ok.grid(row=1, column=1, sticky=tk.SE, padx=(0, 10), pady=0)
+        ok.bind("<Button-1>", lambda event, screen=confirm_screen: self.ok(screen))
+
+    def ok(self, screen):
+        history_total = self.searches.index("end")
+
+        for num in range(history_total + 1):
+            self.searches.delete(0)
+
+        screen.destroy()
+
+    def cancel(self, screen):
+        screen.destroy()
 
     def exit(self):
         self.root.quit()
