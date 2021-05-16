@@ -1,5 +1,4 @@
 import tkinter as tk
-from pexels_api import API  # for Pexels API (images)
 import requests  # handle HTTP requests
 from PIL import ImageTk, Image  # for embedding images to Python/Tkinter
 from io import BytesIO  # similar to previous
@@ -150,33 +149,29 @@ class Main(tk.Frame):
         if country != self.toolbar.get_countries()[0][0]:
             url = 'https://newsapi.org/v2/top-headlines?country=' + country + '&apiKey=' + key
 
-
         temp_news = []
 
         response = requests.get(url)
         results = response.json()
 
-        print(url)
-        print(results)
-
-
         for x in range(len(results['articles']) - 1):
             temp_news.append(results['articles'][x])
-
 
         self.news_results.set_news(temp_news)
 
     def image_api(self, keyword):
         temp_images = []
+        images = []
 
         key = '563492ad6f91700001000001ecab8f7b0b9f4371b013fa9bc225c984'
-        api = API(key)
-        api.search(keyword, page=1, results_per_page=6)
-        images = api.get_entries()
+        url = "https://api.pexels.com/v1/search?query={}&per_page={}&page={}".format(keyword, 27, 1)
 
-        # for img in range(6):
-        for img in images:
-            response = requests.get(img.original)
+        response = requests.get(url, headers={'Authorization': key, 'X-Ratelimit-Remaining': 'X-Ratelimit-Remaining'})
+        for y in response.json()['photos']:
+            images.append(y['src'])
+
+        for x in images:
+            response = requests.get(x['large'])
             im1 = Image.open(BytesIO(response.content))
             im1.thumbnail((800, 800))
             temp_images.append(im1)
@@ -192,15 +187,21 @@ class Main(tk.Frame):
 
         frame = self.frames[page]
         if page == 0:
+            # show News & hide Images
             self.frames[1].redCanvas.grid_remove()
             self.frames[1].scrollbar.grid_remove()
             self.frames[0].redCanvas.grid()
             self.frames[0].scrollbar.grid()
+            self.forward.bind("<Button-1>", lambda root: self.news_results.increase_page(5, True))
+            self.back.bind("<Button-1>", lambda root: self.news_results.increase_page(-5, False))
         else:
+            # show Images & hide News
             self.frames[0].redCanvas.grid_remove()
             self.frames[0].scrollbar.grid_remove()
             self.frames[1].redCanvas.grid()
             self.frames[1].scrollbar.grid()
+            self.forward.bind("<Button-1>", lambda root: self.image_results.increase_page(9, True))
+            self.back.bind("<Button-1>", lambda root: self.image_results.increase_page(-9, False))
 
         frame.tkraise()
 
@@ -326,20 +327,34 @@ class ImageResults(Results):
         self.images = []
         self.images_canvas = []
 
-        for x in range(5):
+        self.start = 0
+        self.end = 9
+
+        for x in range(3):
             for y in range(3):
                 image = tk.Canvas(self.blueCanvas, height=180, width=180, bg="black")
                 image.grid(row=x, column=y, sticky=tk.W, padx=(15, 15), pady=(15, 15))
                 self.images_canvas.append(image)
 
-    def set_images(self, img_set):
-        total_img = len(img_set)
+    def increase_page(self, num, increase):
+        if self.end < 27 and increase is True:
+            self.start += num
+            self.end += num
+            self.set_images(self.images)
 
-        # add images to canvas
-        for x in range(total_img):
-            img = ImageTk.PhotoImage(img_set[x])
-            # current not using self.images for any purpose, but later on it might be useful for 'history' features
-            self.images.append(img)
+        elif self.start > 0 and increase is False:
+            self.start += num
+            self.end += num
+            self.set_images(self.images)
+
+    def set_images(self, img_set):
+        self.images = img_set
+
+        # clear any existing image and add new image to canvas
+        for x in range(9):
+            self.images_canvas[x].delete("all")
+
+            img = ImageTk.PhotoImage(img_set[self.start + x])
             self.images_canvas[x].create_image(0, 0, image=img)
             self.images_canvas[x].bind("<Button-1>", lambda event, arg=img: self.enlarge_images(event, arg))
             self.images_canvas[x].bind("<Enter>", lambda event, arg=self.images_canvas[x]: self.mouse_in(event, arg))
