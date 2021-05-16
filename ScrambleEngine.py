@@ -141,17 +141,28 @@ class Main(tk.Frame):
 
     def news_api(self, keyword):
         key = 'dde38eb277ba442caaaa89a152952773'
+
+        country = self.toolbar.get_themes_var()
+
+
         url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key + '&language=' + self.language
+
+        if country != self.toolbar.get_countries()[0][0]:
+            url = 'https://newsapi.org/v2/top-headlines?country=' + country + '&apiKey=' + key
+
 
         temp_news = []
 
         response = requests.get(url)
         results = response.json()
 
-        print(len(results['articles']))
+        print(url)
+        print(results)
+
 
         for x in range(len(results['articles']) - 1):
             temp_news.append(results['articles'][x])
+
 
         self.news_results.set_news(temp_news)
 
@@ -357,6 +368,28 @@ class Toolbar(tk.Menu):
         self.root = root
 
         self.search_history = []
+        self.countries = [("All", "All"),
+                          ("Australia", "au"),
+                          ("Brazil", "br"),
+                          ("Canada", "ca"),
+                          ("China", "zh"),
+                          ("Germany", "de"),
+                          ("United Kingdom", "gb"),
+                          ("Hong Kong", "hk"),
+                          ("Israel", "il"),
+                          ("India", "in"),
+                          ("Italy", "it"),
+                          ("Japan", "jp"),
+                          ("South Korea", "kr"),
+                          ("Mexico", "mx"),
+                          ("Malaysia", "ma"),
+                          ("Russia", "ru"),
+                          ("Saudi Arabia", "sa"),
+                          ("Singapore", "sg"),
+                          ("Thailand", "th"),
+                          ("Taiwan", "tw"),
+                          ("United States", "us")
+                          ]
 
         # file menu
         self.file = tk.Menu(self.menu, tearoff=0)
@@ -391,7 +424,7 @@ class Toolbar(tk.Menu):
         # advanced menu
         self.themes_var = tk.StringVar()
         self.languages = tk.StringVar()
-        self.themes_var.set(1)
+        self.themes_var.set(self.countries[0][0])
         self.languages.set(1)
 
         self.advanced = tk.Menu(self.menu, tearoff=0)
@@ -399,13 +432,11 @@ class Toolbar(tk.Menu):
 
         self.themes = tk.Menu(self.advanced, tearoff=0)
 
-        self.advanced.add_cascade(label="Location", menu=self.themes)
-        countries = ["All", "Australia", "Brazil", "Canada", "China", "Germany", "United Kingdom", "Hong Kong",
-                     "Israel", "India", "Italy", "Japan", "South Korea", "Mexico", "Malaysia", "Russia",
-                     "Saudi Arabia", "Singapore", "Thailand", "Taiwan", "United States"]
+        self.advanced.add_cascade(label="Top News By Location", menu=self.themes)
 
-        for x in range(len(countries)):
-            self.themes.add_radiobutton(label=countries[x], value=x + 1, variable=self.themes_var)
+
+        for x in range(len(self.countries)):
+            self.themes.add_radiobutton(label=self.countries[x][0], value=self.countries[x][1], variable=self.themes_var)
 
         self.advanced.add_separator()
         self.advanced.add_radiobutton(label="English", variable=self.languages, value=1,
@@ -423,6 +454,12 @@ class Toolbar(tk.Menu):
     def show_tutorial(self):
         # add tutorial
         Tutorial(self.root)
+
+    def get_countries(self):
+        return self.countries
+
+    def get_themes_var(self):
+        return self.themes_var.get()
 
     def set_language(self, language):
         self.root.set_language(language)
@@ -458,8 +495,9 @@ class Toolbar(tk.Menu):
     def ok(self, screen):
         history_total = self.searches.index("end")
 
-        for num in range(history_total + 1):
-            self.searches.delete(0)
+        if history_total is not None:
+            for num in range(history_total + 1):
+                self.searches.delete(0)
 
         screen.destroy()
 
