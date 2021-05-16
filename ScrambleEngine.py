@@ -205,6 +205,8 @@ class Main(tk.Frame):
 
         frame.tkraise()
 
+    def open_link(self, event, arg):
+        webbrowser.open_new(arg)
 
 class Results(tk.Frame):
     def __init__(self, root):
@@ -238,6 +240,7 @@ class Results(tk.Frame):
 class NewsResults(Results):
     def __init__(self, root):
         Results.__init__(self, root)
+        self.root = root
 
         self.news = []
         self.news_canvas = []
@@ -307,11 +310,10 @@ class NewsResults(Results):
                 self.canvas_objs.append(y)
 
             self.news_canvas[x].grid(row=x)
-            self.news_canvas[x].bind("<Button-1>", lambda event, arg=news_list[x]['url']: self.open_article(event, arg))
+            self.news_canvas[x].bind("<Button-1>", lambda event, arg=news_list[x]['url']: self.root.open_link(event, arg))
             self.news_canvas[x].bind("<Enter>", lambda event, arg=self.news_canvas[x]: self.mouse_in(event, arg))
 
-    def open_article(self, event, arg):
-        webbrowser.open_new(arg)
+
 
     def close_image(self, event, arg):
         arg.destroy()
@@ -462,9 +464,9 @@ class Toolbar(tk.Menu):
         # help menu
         self.help = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Help", menu=self.help)
-        self.help.add_command(label="Homepage", command=None)
+        self.help.add_command(label="Homepage", command=lambda: self.root.open_link(self.root, "https://github.com/yu-daniel/CS361"))
         self.help.add_separator()
-        self.help.add_command(label="About...", command=None)
+        self.help.add_command(label="About...", command=self.show_about)
 
     def show_tutorial(self):
         # add tutorial
@@ -515,6 +517,42 @@ class Toolbar(tk.Menu):
                 self.searches.delete(0)
 
         screen.destroy()
+
+    def show_about(self):
+        about = tk.Toplevel(self)
+
+        x = root.winfo_x() + 150
+        y = root.winfo_y() + 130
+
+        about.geometry("320x130+{x}+{y}".format(x=x, y=y))
+        about.title("About...")
+        about.resizable(False, False)
+        about.transient(self.root)
+        about.focus()
+
+        about_container = tk.Frame(about, width=320, height=130, bg="#202020", bd=0, highlightthickness=0)
+        about_container.grid(row=0, column=0)
+
+        logo = tk.Canvas(about_container, width=320, height=47, bg="green", bd=0, highlightthickness=0)
+        logo.grid(row=0, column=0)
+
+        logo_image = ImageTk.PhotoImage(Image.open("logo.png"))
+        logo.background = logo_image
+        logo.create_image(0, 0, ancho=tk.NW, image=logo_image)
+
+
+        version = tk.Label(about_container, text="Version 1.2.0", fg="white", bg="#202020")
+        version.grid(row=1, column=0)
+
+        copyright = tk.Label(about_container, text="Copyright 2021 by Daniel Yu", fg="white", bg="#202020")
+        copyright.grid(row=2, column=0)
+
+        ok = ColorButtons(about_container, "Information regarding software version and creator.", self.root.status_bar,
+                          self.root.status, text="Ok")
+
+        ok.grid(row=3, column=0, sticky=tk.SE, padx=(0, 10), pady=(10, 10))
+        ok.bind("<Button-1>", lambda event, screen=about: self.cancel(screen))
+
 
     def cancel(self, screen):
         screen.destroy()
@@ -613,6 +651,7 @@ class Tutorial(tk.Toplevel):
         img2 = 'test{num}.jpg'.format(num=self.count)
         self.img = ImageTk.PhotoImage(Image.open(img2).resize((500, 350)))
         self.bg.itemconfig(self.bg_image, image=self.img)
+
 
 
 
