@@ -76,11 +76,13 @@ def scraper(route, method):
         return json_data
 
 @app.route('/')
+@cross_origin()
 def index():
     return "Welcome to Daniel's Web Scraper Microservice!"
 
 
 @app.route('/get_data/<keyword>')
+@cross_origin()
 def get_data(keyword):
     json_data = scraper(keyword, "keyword")
     return json_data
@@ -92,6 +94,7 @@ def get_data(keyword):
 # so user must format the url to be: wikipedia.org/<endpoint>
 # Can Alex help format actual urls into this format to use my service?
 @app.route('/get_url/<string:domain>/<string:endpoint>')
+@cross_origin()
 def get_data2(domain, endpoint):
     url = "http://en." + domain + "/wiki/" + endpoint
     json_data = scraper(url, "url")
@@ -99,6 +102,7 @@ def get_data2(domain, endpoint):
 
 # if user wants a random wiki article
 @app.route('/get_random')
+@cross_origin()
 def get_data1():
     url = "https://en.wikipedia.org/wiki/Special:Random"
     json_data = scraper(url, "url")
