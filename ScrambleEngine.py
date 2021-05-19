@@ -5,6 +5,7 @@ from io import BytesIO  # similar to previous
 import random
 import webbrowser
 from dateutil import parser
+import re
 
 
 class Main(tk.Frame):
@@ -130,9 +131,24 @@ class Main(tk.Frame):
         sample = ['Microsoft', 'Bitcoin', 'Amazon', 'YouTube',
                   'Apple', 'Ethereum', 'Nvidia', 'Pepsi']
 
-        num = random.randint(0, len(sample) - 1)
+        response = requests.get("https://backendcs361.herokuapp.com/abstract/Microsoft")
+        print("Below is Jerame's microservice: \n")
+        print(response.json())
 
-        keyword = sample[num]
+        divided = re.split(" | ,", response.json())
+        print("This is after delimiting")
+        print(divided)
+
+
+        # num = random.randint(0, len(sample) - 1)
+        num = random.randint(0, len(divided) - 1)
+
+        print("num = ", num)
+
+        # keyword = sample[num]
+        keyword = divided[num]
+
+
         print("keyword = ", keyword)
 
         self.image_api(keyword)
