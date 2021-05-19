@@ -411,7 +411,7 @@ class Toolbar(tk.Menu):
         # file menu
         self.file = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="File", menu=self.file)
-        self.file.add_command(label="Export", command=None)
+        self.file.add_command(label="Export", command=None, accelerator="")
         # self.file.add_command(label="Settings", command=None)
         self.setting = tk.Menu(self.menu, tearoff=0)
         self.setting.add_separator()
@@ -658,6 +658,7 @@ class Tutorial(tk.Toplevel):
 if __name__ == '__main__':
     root = tk.Tk()
     root.title("Scramble Engine")   # add title to the app
+    root.iconbitmap("logo64.ico")
     root.resizable(False, False)    # don't allow resizing window
     root.geometry("680x620")
     app = Main(root)                # initiate the main interface

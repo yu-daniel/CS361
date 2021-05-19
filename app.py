@@ -1,11 +1,12 @@
 import requests
 from flask import Flask
+from flask_cors import CORS, cross_origin
 from bs4 import BeautifulSoup
 import json
 import re
 
 app = Flask(__name__)
-
+cors = CORS(app)
 
 def scraper(route, method):
     foreign_lang = False
@@ -13,27 +14,6 @@ def scraper(route, method):
         my_url = "https://en.wikipedia.org/wiki/"
 
         if method == "keyword":
-
-            #################################################################################################
-            # Parameters for the GET requests was referenced from https://www.mediawiki.org/wiki/API:Search #
-            #################################################################################################
-
-            # url = "https://en.wikipedia.org/w/api.php"
-            #
-            # payload = {
-            #     "action": "query",
-            #     "format": "json",
-            #     "list": "search",
-            #     "srsearch": route  # search for pages containing 'route'
-            # }
-            #
-            # response = requests.get(url=url, params=payload)
-            #
-            # if response.json()['query']['search'][0]['title'] == route:
-            #     replacement = route.replace(" ", "_")
-            #     my_url += replacement
-            #     print("done replacement: ", my_url)
-
             replacement = route.replace(" ", "_")
             my_url += replacement
 
