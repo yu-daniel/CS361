@@ -141,6 +141,7 @@ class Main(tk.Frame):
     def news_api(self, keyword):
         key = 'dde38eb277ba442caaaa89a152952773'
 
+
         country = self.toolbar.get_themes_var()
 
 

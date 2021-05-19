@@ -6,7 +6,7 @@ import json
 import re
 
 app = Flask(__name__)
-cors = CORS(app)
+cors = CORS(app, support_credentials=True)
 
 def scraper(route, method):
     foreign_lang = False
