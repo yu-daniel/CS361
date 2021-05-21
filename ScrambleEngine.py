@@ -132,24 +132,21 @@ class Main(tk.Frame):
                   'Apple', 'Ethereum', 'Nvidia', 'Pepsi']
 
         response = requests.get("https://backendcs361.herokuapp.com/abstract/Microsoft")
-        print("Below is Jerame's microservice: \n")
-        print(response.json())
+        # print("Below is Jerame's microservice: \n")
+        # print(response.json())
 
         divided = re.split(" | ,", response.json())
-        print("This is after delimiting")
-        print(divided)
-
+        # print("This is after delimiting")
+        # print(divided)
 
         # num = random.randint(0, len(sample) - 1)
         num = random.randint(0, len(divided) - 1)
 
-        print("num = ", num)
-
+        # print("num = ", num)
         # keyword = sample[num]
         keyword = divided[num]
 
-
-        print("keyword = ", keyword)
+        # print("keyword = ", keyword)
 
         self.image_api(keyword)
         self.news_api(keyword)
@@ -160,7 +157,7 @@ class Main(tk.Frame):
 
         country = self.toolbar.get_themes_var()
 
-
+        print(self.language)
         url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key + '&language=' + self.language
 
         if country != self.toolbar.get_countries()[0][0]:
@@ -173,6 +170,7 @@ class Main(tk.Frame):
 
         for x in range(len(results['articles']) - 1):
             temp_news.append(results['articles'][x])
+            print(results['articles'][x])
 
         self.news_results.set_news(temp_news)
 
@@ -289,6 +287,9 @@ class NewsResults(Results):
     def set_news(self, news_list):
         self.news = news_list
         categories = ['title', 'publishedAt', 'author', 'description']
+
+        # print(self.news_canvas)
+        # print(self.canvas_objs)
 
         if len(self.canvas_objs) != 0:
             for canvas in self.news_canvas:
@@ -496,6 +497,7 @@ class Toolbar(tk.Menu):
         return self.themes_var.get()
 
     def set_language(self, language):
+        self.themes_var.set(self.countries[0][0])
         self.root.set_language(language)
 
     def add_search_history(self, keyword):
@@ -677,6 +679,6 @@ if __name__ == '__main__':
     root.title("Scramble Engine")   # add title to the app
     root.iconbitmap("logo64.ico")
     root.resizable(False, False)    # don't allow resizing window
-    root.geometry("680x620")
+    root.geometry("680x640")
     app = Main(root)                # initiate the main interface
     root.mainloop()                 # keep Tkinter running
