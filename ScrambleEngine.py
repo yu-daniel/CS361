@@ -100,10 +100,12 @@ class Main(tk.Frame):
             root.focus()
             return
 
-        if placeholder == "Enter <keyword> to search...":
+        elif placeholder == "Enter <keyword> to search...":
             self.search.delete(0, tk.END)
+            root.focus()
 
-        if placeholder != "Enter <keyword> to search...":
+        elif placeholder != "Enter <keyword> to search...":
+            self.search.delete(0, tk.END)
             self.search.insert(0, "Enter <keyword> to search...")
             root.focus()
 
@@ -118,6 +120,7 @@ class Main(tk.Frame):
             self.toolbar.add_search_history(keyword)
 
             # find images for the search
+
             self.news_api(keyword)
             self.image_api(keyword)
 
@@ -126,16 +129,19 @@ class Main(tk.Frame):
             root.focus()
 
     def random_search(self, event):
+
         # before hooking up with a microservice as a source for keywords,
         # we'll just create our own sample for now...
         sample = ['Microsoft', 'Bitcoin', 'Amazon', 'YouTube',
                   'Apple', 'Ethereum', 'Nvidia', 'Pepsi']
 
-        response = requests.get("https://backendcs361.herokuapp.com/abstract/Microsoft")
+        # response = requests.get("https://backendcs361.herokuapp.com/abstract/Microsoft")
+        response = requests.get("https://daniel-yu.herokuapp.com/get_random")
         # print("Below is Jerame's microservice: \n")
         # print(response.json())
 
-        divided = re.split(" | ,", response.json())
+        # divided = re.split(" | ,", response.json())
+        divided = re.split(" | ,", response.json()['content'])
         # print("This is after delimiting")
         # print(divided)
 
@@ -148,7 +154,10 @@ class Main(tk.Frame):
 
         # print("keyword = ", keyword)
 
+
+        print("@calling image API")
         self.image_api(keyword)
+        print("@calling news API")
         self.news_api(keyword)
 
     def news_api(self, keyword):
@@ -157,7 +166,7 @@ class Main(tk.Frame):
 
         country = self.toolbar.get_themes_var()
 
-        print(self.language)
+        # print(self.language)
         url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key + '&language=' + self.language
 
         if country != self.toolbar.get_countries()[0][0]:
@@ -165,16 +174,29 @@ class Main(tk.Frame):
 
         temp_news = []
 
+        print("@befeore sending GET request.")
+
         response = requests.get(url)
         results = response.json()
 
-        for x in range(len(results['articles']) - 1):
-            temp_news.append(results['articles'][x])
-            print(results['articles'][x])
+        print("@news response: ", results)
 
-        self.news_results.set_news(temp_news)
+        print("@got news GET response back.")
+
+        if results['totalResults'] != 0:
+            for x in range(len(results['articles']) - 1):
+                temp_news.append(results['articles'][x])
+                # print(results['articles'][x])
+
+            self.news_results.set_news(temp_news)
+        else:
+            print("@No news articles were found.")
+            self.status_bar.itemconfig(self.status, text="Results found: 0")
 
     def image_api(self, keyword):
+
+
+
         temp_images = []
         images = []
 
@@ -182,16 +204,23 @@ class Main(tk.Frame):
         url = "https://api.pexels.com/v1/search?query={}&per_page={}&page={}".format(keyword, 27, 1)
 
         response = requests.get(url, headers={'Authorization': key, 'X-Ratelimit-Remaining': 'X-Ratelimit-Remaining'})
-        for y in response.json()['photos']:
-            images.append(y['src'])
 
-        for x in images:
-            response = requests.get(x['large'])
-            im1 = Image.open(BytesIO(response.content))
-            im1.thumbnail((800, 800))
-            temp_images.append(im1)
+        if response.json()['total_results'] != 0:
 
-        self.image_results.set_images(temp_images)
+            for y in response.json()['photos']:
+                images.append(y['src'])
+
+            for x in images:
+                response = requests.get(x['medium'])
+                im1 = Image.open(BytesIO(response.content))
+                im1.thumbnail((800, 800))
+                temp_images.append(im1)
+
+            self.image_results.set_images(temp_images)
+        else:
+            print("@No images were found.")
+            self.status_bar.itemconfig(self.status, text="Results found: 0")
+
 
     def update_message(self, widget):
         self.messenger.set_current(widget)
@@ -247,6 +276,8 @@ class Results(tk.Frame):
         # listen for events that would change the size or drag (i.e scroll) the 'blue' canvas
         self.redCanvas.bind("<Configure>", self.update_scrollbar)
 
+
+
     def update_scrollbar(self, event):
         # set scrolling region of the 'red' canvas
         self.redCanvas.configure(scrollregion=self.redCanvas.bbox("all"))
@@ -295,6 +326,8 @@ class NewsResults(Results):
             for canvas in self.news_canvas:
                 for x in range(4):
                     canvas.delete(self.canvas_objs.pop(0))
+
+        print("@ set_news?")
 
         for x in range(5):
             content = []
@@ -429,22 +462,21 @@ class Toolbar(tk.Menu):
         # file menu
         self.file = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="File", menu=self.file)
-        self.file.add_command(label="Export", command=None, accelerator="")
+        # self.file.add_command(label="Export", command=None, accelerator="")
         # self.file.add_command(label="Settings", command=None)
         self.setting = tk.Menu(self.menu, tearoff=0)
-        self.setting.add_separator()
-        self.setting.add_command(label="Clear History", command=self.confirm)
+        self.setting.add_command(label="Clear History", command=self.confirm, accelerator="Ctrl+Q")
         self.file.add_cascade(label="Settings", menu=self.setting)
 
         self.file.add_separator()
         self.file.add_command(label="Exit", command=self.exit)
 
-        self.edit = tk.Menu(self.menu, tearoff=0)
-        self.add_cascade(label="Edit", menu=self.edit)
-        self.edit.add_command(label="Copy", command=None)
-        self.edit.add_command(label="Paste", command=None)
-        self.edit.add_separator()
-        self.edit.add_command(label="Select All", command=None)
+        # self.edit = tk.Menu(self.menu, tearoff=0)
+        # self.add_cascade(label="Edit", menu=self.edit)
+        # self.edit.add_command(label="Copy", command=None)
+        # self.edit.add_command(label="Paste", command=None)
+        # self.edit.add_separator()
+        # self.edit.add_command(label="Select All", command=None)
 
         # view menu
         self.view = tk.Menu(self.menu, tearoff=0)
@@ -453,8 +485,6 @@ class Toolbar(tk.Menu):
         self.searches = tk.Menu(self.view, tearoff=0)
 
         self.view.add_cascade(label="Search History", menu=self.searches)
-        self.view.add_separator()
-        self.view.add_command(label="Tutorial", command=self.show_tutorial)
 
         # advanced menu
         self.themes_var = tk.StringVar()
@@ -468,10 +498,19 @@ class Toolbar(tk.Menu):
         self.themes = tk.Menu(self.advanced, tearoff=0)
 
         self.advanced.add_cascade(label="Top News By Location", menu=self.themes)
+        self.advanced.add_separator()
 
 
         for x in range(len(self.countries)):
             self.themes.add_radiobutton(label=self.countries[x][0], value=self.countries[x][1], variable=self.themes_var)
+
+
+        self.image_sizes = tk.Menu(self.advanced, tearoff=0)
+        self.image_sizes.add_cascade(label="Small")
+        self.image_sizes.add_cascade(label="Medium")
+        self.image_sizes.add_cascade(label="Large")
+        self.advanced.add_cascade(label="Image Size", menu=self.image_sizes)
+
 
         self.advanced.add_separator()
         self.advanced.add_radiobutton(label="English", variable=self.languages, value=1,
@@ -483,8 +522,12 @@ class Toolbar(tk.Menu):
         self.help = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Help", menu=self.help)
         self.help.add_command(label="Homepage", command=lambda: self.root.open_link(self.root, "https://github.com/yu-daniel/CS361"))
+        self.help.add_command(label="Tutorial", command=self.show_tutorial)
+
         self.help.add_separator()
         self.help.add_command(label="About...", command=self.show_about)
+
+
 
     def show_tutorial(self):
         # add tutorial
@@ -503,7 +546,11 @@ class Toolbar(tk.Menu):
     def add_search_history(self, keyword):
         self.search_history.append(keyword)
 
-        self.searches.add_command(label=keyword, command=None)
+        self.searches.add_command(label=keyword, command=lambda: self.from_history(keyword))
+
+    def from_history(self, keyword):
+        self.root.image_api(keyword)
+        self.root.news_api(keyword)
 
     def confirm(self):
         confirm_screen = tk.Toplevel(self)
