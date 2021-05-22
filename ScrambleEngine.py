@@ -195,8 +195,6 @@ class Main(tk.Frame):
 
     def image_api(self, keyword):
 
-
-
         temp_images = []
         images = []
 
@@ -221,7 +219,6 @@ class Main(tk.Frame):
             print("@No images were found.")
             self.status_bar.itemconfig(self.status, text="Results found: 0")
 
-
     def update_message(self, widget):
         self.messenger.set_current(widget)
         self.status_message = self.messenger.get_current()
@@ -232,20 +229,27 @@ class Main(tk.Frame):
         frame = self.frames[page]
         if page == 0:
             # show News & hide Images
+            # print("Display News")
             self.frames[1].redCanvas.grid_remove()
             self.frames[1].scrollbar.grid_remove()
             self.frames[0].redCanvas.grid()
             self.frames[0].scrollbar.grid()
             self.forward.bind("<Button-1>", lambda root: self.news_results.increase_page(5, True))
             self.back.bind("<Button-1>", lambda root: self.news_results.increase_page(-5, False))
+            self.frames[0].redCanvas.bind_all("<MouseWheel>", self.frames[0].scroll_canvas)
+
+
         else:
             # show Images & hide News
+            # print("Display Images")
             self.frames[0].redCanvas.grid_remove()
             self.frames[0].scrollbar.grid_remove()
             self.frames[1].redCanvas.grid()
             self.frames[1].scrollbar.grid()
             self.forward.bind("<Button-1>", lambda root: self.image_results.increase_page(9, True))
             self.back.bind("<Button-1>", lambda root: self.image_results.increase_page(-9, False))
+            self.frames[1].redCanvas.bind_all("<MouseWheel>", self.frames[1].scroll_canvas)
+
 
         frame.tkraise()
 
@@ -275,6 +279,21 @@ class Results(tk.Frame):
 
         # listen for events that would change the size or drag (i.e scroll) the 'blue' canvas
         self.redCanvas.bind("<Configure>", self.update_scrollbar)
+        self.redCanvas.bind_all("<MouseWheel>", self.scroll_canvas)
+
+
+    def scroll_canvas(self, event):
+        print("Scrolling canvas: ", self)
+        increment = 0
+
+        if event.delta == 120:
+            print('hi', event.delta)
+            increment = -1
+        elif event.delta == -120:
+            print('bye', event.delta)
+            increment = 1
+
+        self.redCanvas.yview_scroll(increment, "units")
 
 
 
