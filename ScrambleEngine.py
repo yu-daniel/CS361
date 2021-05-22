@@ -198,6 +198,8 @@ class Main(tk.Frame):
         temp_images = []
         images = []
 
+        size = self.toolbar.get_image_var()
+
         key = '563492ad6f91700001000001ecab8f7b0b9f4371b013fa9bc225c984'
         url = "https://api.pexels.com/v1/search?query={}&per_page={}&page={}".format(keyword, 27, 1)
 
@@ -209,7 +211,7 @@ class Main(tk.Frame):
                 images.append(y['src'])
 
             for x in images:
-                response = requests.get(x['medium'])
+                response = requests.get(x[size])
                 im1 = Image.open(BytesIO(response.content))
                 im1.thumbnail((800, 800))
                 temp_images.append(im1)
@@ -256,6 +258,7 @@ class Main(tk.Frame):
     def open_link(self, event, arg):
         webbrowser.open_new(arg)
 
+
 class Results(tk.Frame):
     def __init__(self, root):
         tk.Frame.__init__(self, root)
@@ -283,14 +286,14 @@ class Results(tk.Frame):
 
 
     def scroll_canvas(self, event):
-        print("Scrolling canvas: ", self)
+        # print("Scrolling canvas: ", self)
         increment = 0
 
         if event.delta == 120:
-            print('hi', event.delta)
+            # print('hi', event.delta)
             increment = -1
         elif event.delta == -120:
-            print('bye', event.delta)
+            # print('bye', event.delta)
             increment = 1
 
         self.redCanvas.yview_scroll(increment, "units")
@@ -481,8 +484,7 @@ class Toolbar(tk.Menu):
         # file menu
         self.file = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="File", menu=self.file)
-        # self.file.add_command(label="Export", command=None, accelerator="")
-        # self.file.add_command(label="Settings", command=None)
+
         self.setting = tk.Menu(self.menu, tearoff=0)
         self.setting.add_command(label="Clear History", command=self.confirm, accelerator="Ctrl+Q")
         self.file.add_cascade(label="Settings", menu=self.setting)
@@ -490,12 +492,7 @@ class Toolbar(tk.Menu):
         self.file.add_separator()
         self.file.add_command(label="Exit", command=self.exit)
 
-        # self.edit = tk.Menu(self.menu, tearoff=0)
-        # self.add_cascade(label="Edit", menu=self.edit)
-        # self.edit.add_command(label="Copy", command=None)
-        # self.edit.add_command(label="Paste", command=None)
-        # self.edit.add_separator()
-        # self.edit.add_command(label="Select All", command=None)
+
 
         # view menu
         self.view = tk.Menu(self.menu, tearoff=0)
@@ -508,8 +505,10 @@ class Toolbar(tk.Menu):
         # advanced menu
         self.themes_var = tk.StringVar()
         self.languages = tk.StringVar()
+        self.image_var = tk.StringVar()
         self.themes_var.set(self.countries[0][0])
         self.languages.set(1)
+        self.image_var.set("medium")
 
         self.advanced = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Advanced", menu=self.advanced)
@@ -525,9 +524,9 @@ class Toolbar(tk.Menu):
 
 
         self.image_sizes = tk.Menu(self.advanced, tearoff=0)
-        self.image_sizes.add_cascade(label="Small")
-        self.image_sizes.add_cascade(label="Medium")
-        self.image_sizes.add_cascade(label="Large")
+        self.image_sizes.add_radiobutton(label="Small", value="small", variable=self.image_var)
+        self.image_sizes.add_radiobutton(label="Medium", value="medium", variable=self.image_var)
+        self.image_sizes.add_radiobutton(label="Large", value="large", variable=self.image_var)
         self.advanced.add_cascade(label="Image Size", menu=self.image_sizes)
 
 
@@ -557,6 +556,9 @@ class Toolbar(tk.Menu):
 
     def get_themes_var(self):
         return self.themes_var.get()
+
+    def get_image_var(self):
+        return self.image_var.get()
 
     def set_language(self, language):
         self.themes_var.set(self.countries[0][0])
