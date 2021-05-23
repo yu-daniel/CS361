@@ -13,6 +13,7 @@ class Main(tk.Frame):
         super().__init__(root)
         self.grid()  # using Tkinter's grid system over pack
         self.language = "en"
+        self.root = root
 
         # add access to status messages
         self.messenger = Messages()
@@ -96,6 +97,7 @@ class Main(tk.Frame):
         self.status_bar.grid(row=0, column=0, columnspan=102, sticky=tk.SW, padx=(0, 0), pady=(0, 0))
 
         self.frames = [self.news_results, self.image_results, self.home]
+        self.buttons = [self.home_btn, self.news, self.images, self.back, self.forward, self.search_btn, self.bored]
 
 
     def set_language(self, language):
@@ -548,15 +550,16 @@ class Toolbar(tk.Menu):
         self.file.add_separator()
         self.file.add_command(label="Exit", command=self.exit)
 
-
-
         # view menu
         self.view = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="View", menu=self.view)
 
         self.searches = tk.Menu(self.view, tearoff=0)
-
+        self.color_mode = tk.Menu(self.view, tearoff=0)
+        self.view.add_cascade(label="Theme", menu=self.color_mode)
+        self.view.add_separator()
         self.view.add_cascade(label="Search History", menu=self.searches)
+
 
         # advanced menu
         self.themes_var = tk.StringVar()
@@ -565,6 +568,11 @@ class Toolbar(tk.Menu):
         self.themes_var.set(self.countries[0][0])
         self.languages.set(1)
         self.image_var.set("medium")
+        self.color = tk.StringVar()
+        self.color.set(0)
+
+        self.color_mode.add_radiobutton(label="Light", value=0, variable=self.color, command=lambda: self.change_theme(0))
+        self.color_mode.add_radiobutton(label="Dark", value=1, variable=self.color, command=lambda: self.change_theme(1))
 
         self.advanced = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Advanced", menu=self.advanced)
@@ -696,12 +704,47 @@ class Toolbar(tk.Menu):
         ok.grid(row=3, column=0, sticky=tk.SE, padx=(0, 10), pady=(10, 10))
         ok.bind("<Button-1>", lambda event, screen=about: self.cancel(screen))
 
-
     def cancel(self, screen):
         screen.destroy()
 
     def exit(self):
         self.root.quit()
+
+    def change_theme(self, theme):
+        if theme == 0:
+            self.root['bg'] = "#F0F0F0"
+            self.root.root['bg'] = "#F0F0F0"
+
+            self.root.status_container['bg'] = "#F0F0F0"
+            self.root.status_container['bd'] = 1
+            self.root.status_container['highlightthickness'] = 0
+            self.root.status_container['highlightbackground'] = "#F0F0F0"
+
+            self.root.status_bar['bg'] = "#F0F0F0"
+            self.root.status_bar['bd'] = 1
+            self.root.status_bar['highlightthickness'] = 1
+
+            for button in self.root.buttons:
+                button['background'] = "#F6FFEE"
+                button.set_color("black", "#F6FFEE", "#CCFFCC")
+
+        else:
+            self.root['bg'] = "#202020"
+            self.root.root['bg'] = "#202020"
+
+            self.root.status_container['bg'] = "#202020"
+            self.root.status_container['bd'] = 1
+            self.root.status_container['highlightthickness'] = 1
+            self.root.status_container['highlightbackground'] = "#22A753"
+
+            self.root.status_bar['bg'] = "#202020"
+            self.root.status_bar['bd'] = 0
+            self.root.status_bar['highlightthickness'] = 0
+
+            for button in self.root.buttons:
+                button['background'] = "#29CB66"
+                button.set_color("black", "#29CB66", "#202020")
+
 
 
 class Messages:
@@ -724,7 +767,12 @@ class ColorButtons(tk.Button):
         self.status = status_msg
         self.status_message = "Status: "
         self.default = True
-        self['background'] = '#F6FFEE'
+
+        self.fg = None
+        self.bg_default = '#F6FFEE'
+        self.bg_hover = '#CCFFCC'
+
+        self['background'] = self.bg_default
 
         self.bind("<Enter>", lambda event, arg=message: self.update_message(arg))
         self.bind("<Leave>", lambda event, arg=self.status_message: self.update_message(arg))
@@ -734,11 +782,17 @@ class ColorButtons(tk.Button):
         self.status_container.itemconfig(self.status, text=self.status_message)
 
         if self.default:
-            self['background'] = '#CCFFCC'
+            self['background'] = self.bg_hover
             self.default = False
         else:
-            self['background'] = '#F6FFEE'
+            self['background'] = self.bg_default
             self.default = True
+
+    def set_color(self, fg, bg_default, bg_new):
+        self.fg = fg
+        self.bg_default = bg_default
+        self.bg_hover = bg_new
+
 
 
 class Tutorial(tk.Toplevel):

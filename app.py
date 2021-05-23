@@ -35,7 +35,7 @@ def scraper(route, method):
         for x in lang:
             string = str(x)
             # print(type(string), string)
-            if "<span lang" in string:
+            if "<span lang" in string or '<span class="IPA nopopups noexcerpt"':
                 foreign_lang = True
                 break
 
@@ -49,8 +49,6 @@ def scraper(route, method):
         first_paragraph = BeautifulSoup(str(body[target_paragraph]), features="html.parser")
         final_text = first_paragraph.find('p').get_text()  # text is now a string
 
-
-
         target = "\[[^[]*\]"
         final_text = re.sub(target, "", final_text)
         final_text = re.sub("\n", "", final_text)
@@ -58,6 +56,8 @@ def scraper(route, method):
         final_text = re.sub(u"\u2013", "-", final_text)
 
         target = ""
+
+        # print(final_text)
 
         if foreign_lang:
             target = "\([^.]*\)"
