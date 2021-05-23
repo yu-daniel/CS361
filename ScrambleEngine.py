@@ -74,7 +74,7 @@ class Main(tk.Frame):
 
 
         # add search field
-        self.search = tk.Entry(self, width=100, fg="#99FF99", bg="#202020")
+        self.search = tk.Entry(self, width=100, fg="#606060")
         self.search.insert(0, "Enter <keyword> to search...")
         self.search.bind("<Button-1>", self.search_text)  # bind mouse click to search field's placeholder
         self.search_btn.bind("<Button-1>", self.click_search)
@@ -292,7 +292,7 @@ class Home(tk.Frame):
         self['relief'] = 'groove'
 
 
-        self.redCanvas = tk.Canvas(root, width=650, height=500, bg="#202020", bd=1, highlightthickness=2, highlightbackground="green")
+        self.redCanvas = tk.Canvas(root, width=650, height=500, bg="white", bd=1, highlightthickness=2, highlightbackground="green")
 
         # self.blueCanvas = tk.Canvas(self.redCanvas, width=660, height=500, bg="#202020", bd=0, highlightthickness=0)
         # self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=660)
@@ -314,7 +314,7 @@ class Results(tk.Frame):
         self.redCanvas = tk.Canvas(root, width=640, height=500, bg="red", bd=0, highlightthickness=0)
 
         # create another canvas (blue) that'll hold search entries
-        self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450, bg="#202020", bd=0, highlightthickness=0)
+        self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450, bg="white", bd=0, highlightthickness=0)
         self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=640)
 
         # create scrollbar & assign it to 'red' canvas
@@ -724,6 +724,13 @@ class Toolbar(tk.Menu):
             self.root.status_bar['bd'] = 1
             self.root.status_bar['highlightthickness'] = 1
 
+            self.root.search['fg'] = "#606060"
+            self.root.search['background'] = "#F0F0F0"
+
+            self.root.home.redCanvas['background'] = "white"
+            self.root.news_results.blueCanvas['background'] = "white"
+            self.root.image_results.blueCanvas['background'] = "white"
+
             for button in self.root.buttons:
                 button['background'] = "#F6FFEE"
                 button.set_color("black", "#F6FFEE", "#CCFFCC")
@@ -741,9 +748,17 @@ class Toolbar(tk.Menu):
             self.root.status_bar['bd'] = 0
             self.root.status_bar['highlightthickness'] = 0
 
+            self.root.search['fg'] = "#99FF99"
+            self.root.search['background'] = "#202020"
+
+            self.root.home.redCanvas['background'] = "#202020"
+            self.root.news_results.blueCanvas['background'] = "#202020"
+            self.root.image_results.blueCanvas['background'] = "#202020"
+
+
             for button in self.root.buttons:
                 button['background'] = "#29CB66"
-                button.set_color("black", "#29CB66", "#202020")
+                button.set_color("black", "#29CB66", "#FFFF99")
 
 
 
