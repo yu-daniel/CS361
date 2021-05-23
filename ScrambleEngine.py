@@ -32,8 +32,12 @@ class Main(tk.Frame):
         root.config(menu=self.toolbar)
 
         # add buttons to the UI
+        self.home_btn = ColorButtons(self, text="Home", message="System: return to the Home page.",
+                                 status_container=self.status_bar, status_msg=self.status)
+
         self.news = ColorButtons(self, text="News", message="System: search <keyword> for the latest news articles.",
                                  status_container=self.status_bar, status_msg=self.status)
+
         self.images = ColorButtons(self, text="Images", message="System: explore current images for <keyword>.",
                                    status_container=self.status_bar, status_msg=self.status)
 
@@ -43,6 +47,7 @@ class Main(tk.Frame):
         self.forward = ColorButtons(self, text="Next", message="System: navigate to the next search page.",
                                     status_container=self.status_bar, status_msg=self.status)
 
+        self.home_btn.bind("<Button-1>", lambda arg=0: self.switch_page(2))
         self.news.bind("<Button-1>", lambda arg=0: self.switch_page(0))
         self.images.bind("<Button-1>", lambda arg=1: self.switch_page(1))
 
@@ -64,9 +69,11 @@ class Main(tk.Frame):
 
         self.image_results = ImageResults(self)
         self.news_results = NewsResults(self)
+        self.home = Home(self)
+
 
         # add search field
-        self.search = tk.Entry(self, width=100, fg="#606060")
+        self.search = tk.Entry(self, width=100, fg="#99FF99", bg="#202020")
         self.search.insert(0, "Enter <keyword> to search...")
         self.search.bind("<Button-1>", self.search_text)  # bind mouse click to search field's placeholder
         self.search_btn.bind("<Button-1>", self.click_search)
@@ -75,9 +82,10 @@ class Main(tk.Frame):
         self.search.bind("<Leave>", lambda event, arg=self.messenger.default: self.update_message(arg))
 
         # position of objects (buttons, search entry, labels)
-        self.news.grid(row=0, column=0, sticky=tk.W, padx=(10, 3), pady=7)
-        self.images.grid(row=0, column=1, sticky=tk.W, padx=3, pady=7)
-        self.bored.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
+        self.home_btn.grid(row=0, column=0, sticky=tk.W, padx=(10, 3), pady=7)
+        self.news.grid(row=0, column=1, sticky=tk.W, padx=3, pady=7)
+        self.images.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
+        self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
 
         # add search field, search button, and search results position
         self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
@@ -87,7 +95,7 @@ class Main(tk.Frame):
         self.status_container.grid(row=3, column=0, columnspan=102, sticky=tk.SW, padx=(10, 0), pady=(5, 5))
         self.status_bar.grid(row=0, column=0, columnspan=102, sticky=tk.SW, padx=(0, 0), pady=(0, 0))
 
-        self.frames = [self.news_results, self.image_results]
+        self.frames = [self.news_results, self.image_results, self.home]
 
 
     def set_language(self, language):
@@ -127,6 +135,8 @@ class Main(tk.Frame):
             self.search.delete(0, tk.END)
             self.search.insert(0, "Enter <keyword> to search...")
             root.focus()
+
+        self.switch_page(0)
 
     def random_search(self, event):
 
@@ -232,26 +242,40 @@ class Main(tk.Frame):
         if page == 0:
             # show News & hide Images
             # print("Display News")
-            self.frames[1].redCanvas.grid_remove()
-            self.frames[1].scrollbar.grid_remove()
+
             self.frames[0].redCanvas.grid()
             self.frames[0].scrollbar.grid()
+            self.frames[1].redCanvas.grid_remove()
+            self.frames[1].scrollbar.grid_remove()
+
+            self.frames[2].redCanvas.grid_remove()
+
             self.forward.bind("<Button-1>", lambda root: self.news_results.increase_page(5, True))
             self.back.bind("<Button-1>", lambda root: self.news_results.increase_page(-5, False))
             self.frames[0].redCanvas.bind_all("<MouseWheel>", self.frames[0].scroll_canvas)
 
-
-        else:
+        elif page == 1:
             # show Images & hide News
             # print("Display Images")
-            self.frames[0].redCanvas.grid_remove()
-            self.frames[0].scrollbar.grid_remove()
+
             self.frames[1].redCanvas.grid()
             self.frames[1].scrollbar.grid()
+
+            self.frames[0].redCanvas.grid_remove()
+            self.frames[0].scrollbar.grid_remove()
+            self.frames[2].redCanvas.grid_remove()
+
             self.forward.bind("<Button-1>", lambda root: self.image_results.increase_page(9, True))
             self.back.bind("<Button-1>", lambda root: self.image_results.increase_page(-9, False))
             self.frames[1].redCanvas.bind_all("<MouseWheel>", self.frames[1].scroll_canvas)
 
+        elif page == 2:
+            self.frames[2].redCanvas.grid()
+
+            self.frames[0].redCanvas.grid_remove()
+            self.frames[0].scrollbar.grid_remove()
+            self.frames[1].redCanvas.grid_remove()
+            self.frames[1].scrollbar.grid_remove()
 
         frame.tkraise()
 
@@ -259,10 +283,29 @@ class Main(tk.Frame):
         webbrowser.open_new(arg)
 
 
-class Results(tk.Frame):
+class Home(tk.Frame):
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self['borderwidth'] = 1
+        self['relief'] = 'groove'
+
+
+        self.redCanvas = tk.Canvas(root, width=650, height=500, bg="#202020", bd=1, highlightthickness=2, highlightbackground="green")
+
+        # self.blueCanvas = tk.Canvas(self.redCanvas, width=660, height=500, bg="#202020", bd=0, highlightthickness=0)
+        # self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=660)
+
+        self.bg = ImageTk.PhotoImage(Image.open("bg.png").resize((600, 88)))
+        self.redCanvas.background = self.bg
+        self.bg_image = self.redCanvas.create_image(660/2, 400/2, anchor=tk.CENTER, image=self.bg)
+
+        self.redCanvas.grid(row=2, column=0, columnspan=102, sticky=tk.NW, padx=(10, 0), pady=7)
+
+
+class Results(tk.Frame):
+    def __init__(self, root):
+        tk.Frame.__init__(self, root)
+        self['borderwidth'] = 5
         self['relief'] = 'groove'
 
         # main canvas (red) that will hold all News search results (blue),
@@ -318,7 +361,7 @@ class NewsResults(Results):
 
         # add search entries inside the 'blue' canvas
         for i in range(5):
-            news = tk.Canvas(self.blueCanvas, height=200, width=615, bg="black")
+            news = tk.Canvas(self.blueCanvas, height=200, width=615, bg="black", bd=1, highlightthickness=2, highlightbackground="green")
             news.grid(row=i, column=0, sticky=tk.W, padx=(10, 15), pady=(10, 15))
             self.news_canvas.append(news)
 
@@ -338,18 +381,17 @@ class NewsResults(Results):
 
 
     def set_news(self, news_list):
+
         self.news = news_list
         categories = ['title', 'publishedAt', 'author', 'description']
 
-        # print(self.news_canvas)
-        # print(self.canvas_objs)
+        if len(news_list) == 0:
+            return None
 
         if len(self.canvas_objs) != 0:
             for canvas in self.news_canvas:
                 for x in range(4):
                     canvas.delete(self.canvas_objs.pop(0))
-
-        print("@ set_news?")
 
         for x in range(5):
             content = []
@@ -364,18 +406,18 @@ class NewsResults(Results):
 
             # add title
             title = self.news_canvas[x].create_text(5, 25, text=content[0], anchor='nw', width=600,
-                                                    fill="white", font=("Candara", 12, "bold"))
+                                                    fill="white", font=("Arial", 10, "bold"))
 
             # date
-            date = self.news_canvas[x].create_text(5, 50, text=content[1], anchor='nw', width=600,
-                                                   fill="#99FF33", font=("Candara", 12, "normal"))
+            date = self.news_canvas[x].create_text(5, 60, text=content[1], anchor='nw', width=600,
+                                                   fill="#99FF33", font=("Arial", 8, "normal"))
 
             # add source
             source = self.news_canvas[x].create_text(5, 75, text="Source: " + content[2], anchor='nw', width=600,
-                                                     fill="#99FF33", font=("Candara", 12, "normal"))
+                                                     fill="#99FF33", font=("Arial", 8, "normal"))
 
             # add content
-            content = self.news_canvas[x].create_text(5, 125, text=content[3], anchor='nw', width=600,
+            content = self.news_canvas[x].create_text(5, 105, text=content[3], anchor='nw', width=600,
                                                       fill="white")
 
             items = [title, date, source, content]
@@ -398,6 +440,7 @@ class NewsResults(Results):
 class ImageResults(Results):
     def __init__(self, root):
         Results.__init__(self, root)
+        self.root = root
 
         self.images = []
         self.images_canvas = []
@@ -407,14 +450,18 @@ class ImageResults(Results):
 
         for x in range(3):
             for y in range(3):
-                image = tk.Canvas(self.blueCanvas, height=180, width=180, bg="black")
+                image = tk.Canvas(self.blueCanvas, height=180, width=180, bg="black", bd=1, highlightthickness=2, highlightbackground="green")
                 image.grid(row=x, column=y, sticky=tk.W, padx=(15, 15), pady=(15, 15))
                 self.images_canvas.append(image)
 
     def increase_page(self, num, increase):
+        if len(self.images) == 0:
+            return
+
         if self.end < 27 and increase is True:
             self.start += num
             self.end += num
+
             self.set_images(self.images)
 
         elif self.start > 0 and increase is False:
@@ -436,13 +483,21 @@ class ImageResults(Results):
 
     def enlarge_images(self, event, arg):
         image_window = tk.Toplevel(self)
-        image_window.geometry("800x600")
+        image_window.geometry(self.find_size())
         image_window.resizable(False, False)
 
         image_label = tk.Label(image_window, image=arg)
         image_label.grid(row=0, column=0)
         image_label.bind("<Button-1>", lambda event, arg=image_window: self.close_image(event, arg))
         image_label.bind("<Enter>", lambda event, arg=image_label: self.mouse_in(event, arg))
+
+    def find_size(self):
+        size = self.root.toolbar.get_image_var()
+
+        dimensions = {"small": "400x200", "medium": "600x400", "large": "800x600"}
+
+        print(dimensions[size])
+        return dimensions[size]
 
     def close_image(self, event, arg):
         arg.destroy()
@@ -456,6 +511,7 @@ class Toolbar(tk.Menu):
         super().__init__(root)
         self.menu = tk.Menu(self)
         self.root = root
+
 
         self.search_history = []
         self.countries = [("All", "All"),
@@ -666,9 +722,9 @@ class ColorButtons(tk.Button):
         tk.Button.__init__(self, event, **kw)
         self.status_container = status_container
         self.status = status_msg
-        self.defaultBackground = self["background"]
         self.status_message = "Status: "
         self.default = True
+        self['background'] = '#F6FFEE'
 
         self.bind("<Enter>", lambda event, arg=message: self.update_message(arg))
         self.bind("<Leave>", lambda event, arg=self.status_message: self.update_message(arg))
@@ -678,10 +734,10 @@ class ColorButtons(tk.Button):
         self.status_container.itemconfig(self.status, text=self.status_message)
 
         if self.default:
-            self['background'] = '#E5F3FF'
+            self['background'] = '#CCFFCC'
             self.default = False
         else:
-            self['background'] = self.defaultBackground
+            self['background'] = '#F6FFEE'
             self.default = True
 
 
@@ -747,6 +803,6 @@ if __name__ == '__main__':
     root.title("Scramble Engine")   # add title to the app
     root.iconbitmap("logo64.ico")
     root.resizable(False, False)    # don't allow resizing window
-    root.geometry("680x640")
+    root.geometry("680x650")
     app = Main(root)                # initiate the main interface
     root.mainloop()                 # keep Tkinter running
