@@ -147,29 +147,36 @@ class Main(tk.Frame):
         sample = ['Microsoft', 'Bitcoin', 'Amazon', 'YouTube',
                   'Apple', 'Ethereum', 'Nvidia', 'Pepsi']
 
-        # response = requests.get("https://backendcs361.herokuapp.com/abstract/Microsoft")
+        keywords = []
+
         response = requests.get("https://daniel-yu.herokuapp.com/get_random")
-        # print("Below is Jerame's microservice: \n")
-        # print(response.json())
 
-        # divided = re.split(" | ,", response.json())
         divided = re.split(" | ,", response.json()['content'])
-        # print("This is after delimiting")
-        # print(divided)
 
-        # num = random.randint(0, len(sample) - 1)
+
         num = random.randint(0, len(divided) - 1)
 
         # print("num = ", num)
         # keyword = sample[num]
         keyword = divided[num]
+        backup = keyword
 
-        # print("keyword = ", keyword)
+        print("main keyword = ", keyword)
+        alex_response = requests.get("http://text-to-words.herokuapp.com/get_words/" + keyword)
 
+        alex_response = alex_response.json()["words"]
+        for x in alex_response:
+            word_list = alex_response[x]
+            for y in word_list:
+                keywords.append(y)
 
-        print("@calling image API")
+        if len(keywords) != 0:
+            num = random.randint(0, len(keywords) - 1)
+            keyword = keywords[num]
+            for word in keywords:
+                print(word)
+
         self.image_api(keyword)
-        print("@calling news API")
         self.news_api(keyword)
 
     def news_api(self, keyword):
@@ -186,14 +193,14 @@ class Main(tk.Frame):
 
         temp_news = []
 
-        print("@befeore sending GET request.")
+        # print("@befeore sending GET request.")
 
         response = requests.get(url)
         results = response.json()
 
-        print("@news response: ", results)
+        # print("@news response: ", results)
 
-        print("@got news GET response back.")
+        # print("@got news GET response back.")
 
         if results['totalResults'] != 0:
             for x in range(len(results['articles']) - 1):
