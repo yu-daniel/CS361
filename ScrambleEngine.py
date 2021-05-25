@@ -19,8 +19,6 @@ class Main(tk.Frame):
         self.messenger = Messages()
         self.status_message = self.messenger.default
 
-
-
         # add status bar
         self.status_container = tk.Frame(relief="groove", borderwidth="2")
         self.status_bar = tk.Canvas(master=self.status_container, width=652, height=15)
@@ -161,7 +159,7 @@ class Main(tk.Frame):
         keyword = divided[num]
         backup = keyword
 
-        print("main keyword = ", keyword)
+        # print("main keyword = ", keyword)
         alex_response = requests.get("http://text-to-words.herokuapp.com/get_words/" + keyword)
 
         alex_response = alex_response.json()["words"]
@@ -173,8 +171,8 @@ class Main(tk.Frame):
         if len(keywords) != 0:
             num = random.randint(0, len(keywords) - 1)
             keyword = keywords[num]
-            for word in keywords:
-                print(word)
+            # for word in keywords:
+            #     print(word)
 
         self.image_api(keyword)
         self.news_api(keyword)
@@ -370,7 +368,7 @@ class NewsResults(Results):
 
         # add search entries inside the 'blue' canvas
         for i in range(5):
-            news = tk.Canvas(self.blueCanvas, height=200, width=615, bg="black", bd=1, highlightthickness=2, highlightbackground="green")
+            news = tk.Canvas(self.blueCanvas, height=200, width=615, bg="white", bd=1, highlightthickness=2, highlightbackground="green")
             news.grid(row=i, column=0, sticky=tk.W, padx=(10, 15), pady=(10, 15))
             self.news_canvas.append(news)
 
@@ -459,7 +457,7 @@ class ImageResults(Results):
 
         for x in range(3):
             for y in range(3):
-                image = tk.Canvas(self.blueCanvas, height=180, width=180, bg="black", bd=1, highlightthickness=2, highlightbackground="green")
+                image = tk.Canvas(self.blueCanvas, height=180, width=180, bg="white", bd=1, highlightthickness=2, highlightbackground="green")
                 image.grid(row=x, column=y, sticky=tk.W, padx=(15, 15), pady=(15, 15))
                 self.images_canvas.append(image)
 
@@ -699,7 +697,7 @@ class Toolbar(tk.Menu):
         logo.create_image(0, 0, ancho=tk.NW, image=logo_image)
 
 
-        version = tk.Label(about_container, text="Version 1.2.0", fg="white", bg="#202020")
+        version = tk.Label(about_container, text="Version 1.1.1", fg="white", bg="#202020")
         version.grid(row=1, column=0)
 
         copyright = tk.Label(about_container, text="Copyright 2021 by Daniel Yu", fg="white", bg="#202020")
@@ -722,6 +720,8 @@ class Toolbar(tk.Menu):
             self.root['bg'] = "#F0F0F0"
             self.root.root['bg'] = "#F0F0F0"
 
+            self.root.status_bar.itemconfig(self.root.status, fill="#606060")
+
             self.root.status_container['bg'] = "#F0F0F0"
             self.root.status_container['bd'] = 1
             self.root.status_container['highlightthickness'] = 0
@@ -738,6 +738,12 @@ class Toolbar(tk.Menu):
             self.root.news_results.blueCanvas['background'] = "white"
             self.root.image_results.blueCanvas['background'] = "white"
 
+            for canvas in self.root.news_results.news_canvas:
+                canvas['background'] = "white"
+
+            for canvas in self.root.image_results.images_canvas:
+                canvas['background'] = "white"
+
             for button in self.root.buttons:
                 button['background'] = "#F6FFEE"
                 button.set_color("black", "#F6FFEE", "#CCFFCC")
@@ -745,6 +751,8 @@ class Toolbar(tk.Menu):
         else:
             self.root['bg'] = "#202020"
             self.root.root['bg'] = "#202020"
+
+            self.root.status_bar.itemconfig(self.root.status, fill="#29CB66")
 
             self.root.status_container['bg'] = "#202020"
             self.root.status_container['bd'] = 1
@@ -762,6 +770,11 @@ class Toolbar(tk.Menu):
             self.root.news_results.blueCanvas['background'] = "#202020"
             self.root.image_results.blueCanvas['background'] = "#202020"
 
+            for canvas in self.root.news_results.news_canvas:
+                canvas['background'] = "black"
+
+            for canvas in self.root.image_results.images_canvas:
+                canvas['background'] = "black"
 
             for button in self.root.buttons:
                 button['background'] = "#29CB66"
