@@ -140,29 +140,15 @@ class Main(tk.Frame):
 
     def random_search(self, event):
 
-        # before hooking up with a microservice as a source for keywords,
-        # we'll just create our own sample for now...
-        sample = ['Microsoft', 'Bitcoin', 'Amazon', 'YouTube',
-                  'Apple', 'Ethereum', 'Nvidia', 'Pepsi']
-
         keywords = []
-
         response = requests.get("https://daniel-yu.herokuapp.com/get_random")
-
         divided = re.split(" | ,", response.json()['content'])
-
-
         num = random.randint(0, len(divided) - 1)
 
-        # print("num = ", num)
-        # keyword = sample[num]
         keyword = divided[num]
-        backup = keyword
-
-        # print("main keyword = ", keyword)
         alex_response = requests.get("http://text-to-words.herokuapp.com/get_words/" + keyword)
-
         alex_response = alex_response.json()["words"]
+
         for x in alex_response:
             word_list = alex_response[x]
             for y in word_list:
@@ -171,8 +157,6 @@ class Main(tk.Frame):
         if len(keywords) != 0:
             num = random.randint(0, len(keywords) - 1)
             keyword = keywords[num]
-            # for word in keywords:
-            #     print(word)
 
         self.image_api(keyword)
         self.news_api(keyword)
@@ -244,47 +228,29 @@ class Main(tk.Frame):
         self.status_bar.itemconfig(self.status, text=self.status_message)
 
     def switch_page(self, page):
-
         frame = self.frames[page]
+        num_entries = 0
+
         if page == 0:
-            # show News & hide Images
-            # print("Display News")
+            num_entries += 5
+        else:
+            num_entries += 9
 
-            self.frames[0].redCanvas.grid()
-            self.frames[0].scrollbar.grid()
-            self.frames[1].redCanvas.grid_remove()
-            self.frames[1].scrollbar.grid_remove()
+        for x in range(3):
+            if page == 0 or page == 1:
+                self.frames[page].redCanvas.bind_all("<MouseWheel>", self.frames[page].scroll_canvas)
+                self.forward.bind("<Button-1>", lambda root: self.frames[page].increase_page(num_entries, True))
+                self.back.bind("<Button-1>", lambda root: self.frames[page].increase_page(num_entries*-1, False))
 
-            self.frames[2].redCanvas.grid_remove()
-
-            self.forward.bind("<Button-1>", lambda root: self.news_results.increase_page(5, True))
-            self.back.bind("<Button-1>", lambda root: self.news_results.increase_page(-5, False))
-            self.frames[0].redCanvas.bind_all("<MouseWheel>", self.frames[0].scroll_canvas)
-
-        elif page == 1:
-            # show Images & hide News
-            # print("Display Images")
-
-            self.frames[1].redCanvas.grid()
-            self.frames[1].scrollbar.grid()
-
-            self.frames[0].redCanvas.grid_remove()
-            self.frames[0].scrollbar.grid_remove()
-            self.frames[2].redCanvas.grid_remove()
-
-            self.forward.bind("<Button-1>", lambda root: self.image_results.increase_page(9, True))
-            self.back.bind("<Button-1>", lambda root: self.image_results.increase_page(-9, False))
-            self.frames[1].redCanvas.bind_all("<MouseWheel>", self.frames[1].scroll_canvas)
-
-        elif page == 2:
-            self.frames[2].redCanvas.grid()
-
-            self.frames[0].redCanvas.grid_remove()
-            self.frames[0].scrollbar.grid_remove()
-            self.frames[1].redCanvas.grid_remove()
-            self.frames[1].scrollbar.grid_remove()
+            if page == x:
+                self.frames[x].redCanvas.grid()
+                self.frames[x].scrollbar.grid()
+            else:
+                self.frames[x].redCanvas.grid_remove()
+                self.frames[x].scrollbar.grid_remove()
 
         frame.tkraise()
+
 
     def open_link(self, event, arg):
         webbrowser.open_new(arg)
@@ -296,11 +262,8 @@ class Home(tk.Frame):
         self['borderwidth'] = 1
         self['relief'] = 'groove'
 
-
-        self.redCanvas = tk.Canvas(root, width=650, height=500, bg="white", bd=1, highlightthickness=2, highlightbackground="green")
-
-        # self.blueCanvas = tk.Canvas(self.redCanvas, width=660, height=500, bg="#202020", bd=0, highlightthickness=0)
-        # self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=660)
+        self.redCanvas = tk.Canvas(root, width=650, height=500, bg="#F9F9F9", bd=1, highlightthickness=2, highlightbackground="green")
+        self.scrollbar = tk.Scrollbar(root, command=self.redCanvas.yview, orient=tk.VERTICAL)
 
         self.bg = ImageTk.PhotoImage(Image.open("bg.png").resize((600, 88)))
         self.redCanvas.background = self.bg
@@ -316,10 +279,10 @@ class Results(tk.Frame):
         self['relief'] = 'groove'
 
         # main canvas (red) that will hold all News search results (blue),
-        self.redCanvas = tk.Canvas(root, width=640, height=500, bg="red", bd=0, highlightthickness=0)
+        self.redCanvas = tk.Canvas(root, width=640, height=500, bg="#202020", bd=0, highlightthickness=0)
 
         # create another canvas (blue) that'll hold search entries
-        self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450, bg="white", bd=0, highlightthickness=0)
+        self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450, bg="#F9F9F9", bd=0, highlightthickness=0)
         self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=640)
 
         # create scrollbar & assign it to 'red' canvas
@@ -368,7 +331,7 @@ class NewsResults(Results):
 
         # add search entries inside the 'blue' canvas
         for i in range(5):
-            news = tk.Canvas(self.blueCanvas, height=200, width=615, bg="white", bd=1, highlightthickness=2, highlightbackground="green")
+            news = tk.Canvas(self.blueCanvas, height=200, width=615, bg="#F9FFF3", bd=1, highlightthickness=2, highlightbackground="green")
             news.grid(row=i, column=0, sticky=tk.W, padx=(10, 15), pady=(10, 15))
             self.news_canvas.append(news)
 
@@ -457,7 +420,7 @@ class ImageResults(Results):
 
         for x in range(3):
             for y in range(3):
-                image = tk.Canvas(self.blueCanvas, height=180, width=180, bg="white", bd=1, highlightthickness=2, highlightbackground="green")
+                image = tk.Canvas(self.blueCanvas, height=180, width=180, bg="#F9FFF3", bd=1, highlightthickness=2, highlightbackground="green")
                 image.grid(row=x, column=y, sticky=tk.W, padx=(15, 15), pady=(15, 15))
                 self.images_canvas.append(image)
 
@@ -771,10 +734,10 @@ class Toolbar(tk.Menu):
             self.root.image_results.blueCanvas['background'] = "#202020"
 
             for canvas in self.root.news_results.news_canvas:
-                canvas['background'] = "black"
+                canvas['background'] = "white"
 
             for canvas in self.root.image_results.images_canvas:
-                canvas['background'] = "black"
+                canvas['background'] = "white"
 
             for button in self.root.buttons:
                 button['background'] = "#29CB66"
