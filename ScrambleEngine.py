@@ -413,19 +413,19 @@ class NewsResults(Results):
 
                 # add title
                 title = self.news_canvas[x].create_text(5, 25, text=content[0], anchor='nw', width=600,
-                                                        fill="white", font=("Arial", 10, "bold"))
+                                                        fill="black", font=("Arial", 10, "bold"))
 
                 # date
                 date = self.news_canvas[x].create_text(5, 60, text=content[1], anchor='nw', width=600,
-                                                       fill="#99FF33", font=("Arial", 8, "normal"))
+                                                       fill="black", font=("Arial", 8, "normal"))
 
                 # add source
                 source = self.news_canvas[x].create_text(5, 75, text="Source: " + content[2], anchor='nw', width=600,
-                                                         fill="#99FF33", font=("Arial", 8, "normal"))
+                                                         fill="black", font=("Arial", 8, "normal"))
 
                 # add content
                 content = self.news_canvas[x].create_text(5, 105, text=content[3], anchor='nw', width=600,
-                                                          fill="white")
+                                                          fill="black")
 
                 items = [title, date, source, content]
                 for y in items:
