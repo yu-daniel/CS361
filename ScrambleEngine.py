@@ -159,7 +159,7 @@ class Main(tk.Frame):
         keyword = divided[num]
         backup = keyword
 
-        # print("main keyword = ", keyword)
+        print("main keyword = ", keyword)
         alex_response = requests.get("http://text-to-words.herokuapp.com/get_words/" + keyword)
 
         alex_response = alex_response.json()["words"]
@@ -171,6 +171,7 @@ class Main(tk.Frame):
         if len(keywords) != 0:
             num = random.randint(0, len(keywords) - 1)
             keyword = keywords[num]
+            print("------------- ", keyword)
             # for word in keywords:
             #     print(word)
 
@@ -179,11 +180,7 @@ class Main(tk.Frame):
 
     def news_api(self, keyword):
         key = 'dde38eb277ba442caaaa89a152952773'
-
-
         country = self.toolbar.get_themes_var()
-
-        # print(self.language)
         url = 'https://newsapi.org/v2/everything?q=' + keyword + '&apiKey=' + key + '&language=' + self.language
 
         if country != self.toolbar.get_countries()[0][0]:
@@ -191,20 +188,16 @@ class Main(tk.Frame):
 
         temp_news = []
 
-        # print("@befeore sending GET request.")
-
         response = requests.get(url)
         results = response.json()
 
-        # print("@news response: ", results)
-
-        # print("@got news GET response back.")
+        print("This is the TOTAL results from news API: ")
+        print(results['totalResults'])
+        print("\n\n")
 
         if results['totalResults'] != 0:
             for x in range(len(results['articles']) - 1):
                 temp_news.append(results['articles'][x])
-                # print(results['articles'][x])
-
             self.news_results.set_news(temp_news)
         else:
             print("@No news articles were found.")
@@ -222,8 +215,11 @@ class Main(tk.Frame):
 
         response = requests.get(url, headers={'Authorization': key, 'X-Ratelimit-Remaining': 'X-Ratelimit-Remaining'})
 
-        if response.json()['total_results'] != 0:
+        # print("This is the TOTAL results from image API: ")
+        # print(response.json()['total_results'])
+        # print("\n\n")
 
+        if response.json()['total_results'] != 0:
             for y in response.json()['photos']:
                 images.append(y['src'])
 
@@ -232,7 +228,6 @@ class Main(tk.Frame):
                 im1 = Image.open(BytesIO(response.content))
                 im1.thumbnail((800, 800))
                 temp_images.append(im1)
-
             self.image_results.set_images(temp_images)
         else:
             print("@No images were found.")
@@ -297,7 +292,7 @@ class Home(tk.Frame):
         self['relief'] = 'groove'
 
 
-        self.redCanvas = tk.Canvas(root, width=650, height=500, bg="white", bd=1, highlightthickness=2, highlightbackground="green")
+        self.redCanvas = tk.Canvas(root, width=650, height=500, bg="#FCFCFC", bd=1, highlightthickness=2, highlightbackground="green")
 
         # self.blueCanvas = tk.Canvas(self.redCanvas, width=660, height=500, bg="#202020", bd=0, highlightthickness=0)
         # self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=660)
@@ -316,10 +311,10 @@ class Results(tk.Frame):
         self['relief'] = 'groove'
 
         # main canvas (red) that will hold all News search results (blue),
-        self.redCanvas = tk.Canvas(root, width=640, height=500, bg="red", bd=0, highlightthickness=0)
+        self.redCanvas = tk.Canvas(root, width=640, height=500, bg="#202020", bd=0, highlightthickness=0)
 
         # create another canvas (blue) that'll hold search entries
-        self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450, bg="white", bd=0, highlightthickness=0)
+        self.blueCanvas = tk.Canvas(self.redCanvas, width=640, height=450, bg="#F6F6F6", bd=0, highlightthickness=0)
         self.redCanvas.create_window(0, 0, window=self.blueCanvas, anchor=tk.NW, width=640)
 
         # create scrollbar & assign it to 'red' canvas
@@ -402,38 +397,38 @@ class NewsResults(Results):
 
         for x in range(5):
             content = []
+            if (self.start + x) < len(news_list):
+                for y in categories:
+                    data = news_list[self.start + x][y]
+                    if data is None:
+                        data = 'N/A'
+                    elif y == 'publishedAt':
+                        data = parser.parse(data).date()
+                    content.append(data)
 
-            for y in categories:
-                data = news_list[self.start + x][y]
-                if data is None:
-                    data = 'N/A'
-                elif y == 'publishedAt':
-                    data = parser.parse(data).date()
-                content.append(data)
+                # add title
+                title = self.news_canvas[x].create_text(5, 25, text=content[0], anchor='nw', width=600,
+                                                        fill="black", font=("Arial", 10, "bold"))
 
-            # add title
-            title = self.news_canvas[x].create_text(5, 25, text=content[0], anchor='nw', width=600,
-                                                    fill="white", font=("Arial", 10, "bold"))
+                # date
+                date = self.news_canvas[x].create_text(5, 60, text=content[1], anchor='nw', width=600,
+                                                       fill="black", font=("Arial", 8, "normal"))
 
-            # date
-            date = self.news_canvas[x].create_text(5, 60, text=content[1], anchor='nw', width=600,
-                                                   fill="#99FF33", font=("Arial", 8, "normal"))
+                # add source
+                source = self.news_canvas[x].create_text(5, 75, text="Source: " + content[2], anchor='nw', width=600,
+                                                         fill="black", font=("Arial", 8, "normal"))
 
-            # add source
-            source = self.news_canvas[x].create_text(5, 75, text="Source: " + content[2], anchor='nw', width=600,
-                                                     fill="#99FF33", font=("Arial", 8, "normal"))
+                # add content
+                content = self.news_canvas[x].create_text(5, 105, text=content[3], anchor='nw', width=600,
+                                                          fill="black")
 
-            # add content
-            content = self.news_canvas[x].create_text(5, 105, text=content[3], anchor='nw', width=600,
-                                                      fill="white")
+                items = [title, date, source, content]
+                for y in items:
+                    self.canvas_objs.append(y)
 
-            items = [title, date, source, content]
-            for y in items:
-                self.canvas_objs.append(y)
-
-            self.news_canvas[x].grid(row=x)
-            self.news_canvas[x].bind("<Button-1>", lambda event, arg=news_list[x]['url']: self.root.open_link(event, arg))
-            self.news_canvas[x].bind("<Enter>", lambda event, arg=self.news_canvas[x]: self.mouse_in(event, arg))
+                self.news_canvas[x].grid(row=x)
+                self.news_canvas[x].bind("<Button-1>", lambda event, arg=news_list[x]['url']: self.root.open_link(event, arg))
+                self.news_canvas[x].bind("<Enter>", lambda event, arg=self.news_canvas[x]: self.mouse_in(event, arg))
 
 
 
@@ -482,18 +477,20 @@ class ImageResults(Results):
         # clear any existing image and add new image to canvas
         for x in range(9):
             self.images_canvas[x].delete("all")
+            if (self.start + x) < len(img_set):
 
-            img = ImageTk.PhotoImage(img_set[self.start + x])
-            self.images_canvas[x].create_image(0, 0, image=img)
-            self.images_canvas[x].bind("<Button-1>", lambda event, arg=img: self.enlarge_images(event, arg))
-            self.images_canvas[x].bind("<Enter>", lambda event, arg=self.images_canvas[x]: self.mouse_in(event, arg))
+                img = ImageTk.PhotoImage(img_set[self.start + x])
+                self.images_canvas[x].create_image(0, 0, image=img)
+                self.images_canvas[x].bind("<Button-1>", lambda event, image=img: self.enlarge_images(event, img))
+                self.images_canvas[x].bind("<Enter>", lambda event, arg=self.images_canvas[x]: self.mouse_in(event, arg))
 
-    def enlarge_images(self, event, arg):
+    def enlarge_images(self, event, image):
+
         image_window = tk.Toplevel(self)
         image_window.geometry(self.find_size())
         image_window.resizable(False, False)
 
-        image_label = tk.Label(image_window, image=arg)
+        image_label = tk.Label(image_window, image=image)
         image_label.grid(row=0, column=0)
         image_label.bind("<Button-1>", lambda event, arg=image_window: self.close_image(event, arg))
         image_label.bind("<Enter>", lambda event, arg=image_label: self.mouse_in(event, arg))
@@ -503,7 +500,6 @@ class ImageResults(Results):
 
         dimensions = {"small": "400x200", "medium": "600x400", "large": "800x600"}
 
-        print(dimensions[size])
         return dimensions[size]
 
     def close_image(self, event, arg):
