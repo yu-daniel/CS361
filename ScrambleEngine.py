@@ -6,6 +6,7 @@ import random
 import webbrowser
 from dateutil import parser
 import re
+import time
 
 
 class Main(tk.Frame):
@@ -24,6 +25,7 @@ class Main(tk.Frame):
         self.status_bar = tk.Canvas(master=self.status_container, width=652, height=15)
         # self.status = tk.Label(self.status_container2, text=self.status_message, fg="#606060")
         self.status = self.status_bar.create_text(10, 0, anchor="nw", text=self.status_message, fill="#606060")
+        self.status_set = [self.status_bar, self.status]
 
         # initiate the main toolbar
 
@@ -31,31 +33,30 @@ class Main(tk.Frame):
         root.config(menu=self.toolbar)
 
         # add buttons to the UI
-        self.home_btn = ColorButtons(self, text="Home", message="System: return to the Home page.",
-                                     status_container=self.status_bar, status_msg=self.status)
+        self.home_btn = ColorButtons(self, text="Home",
+                                     message="System: return to the Home page.", status=self.status_set)
 
-        self.news = ColorButtons(self, text="News", message="System: search <keyword> for the latest news articles.",
-                                 status_container=self.status_bar, status_msg=self.status)
+        self.news = ColorButtons(self, text="News",
+                                 message="System: search <keyword> for the latest news articles.",
+                                 status=self.status_set)
 
-        self.images = ColorButtons(self, text="Images", message="System: explore current images for <keyword>.",
-                                   status_container=self.status_bar, status_msg=self.status)
+        self.images = ColorButtons(self, text="Images",
+                                   message="System: explore current images for <keyword>.", status=self.status_set)
 
-        self.back = ColorButtons(self, text="Previous", message="System: navigate to the previous search page.",
-                                 status_container=self.status_bar, status_msg=self.status)
+        self.back = ColorButtons(self, text="Previous",
+                                 message="System: navigate to the previous search page.", status=self.status_set)
 
-        self.forward = ColorButtons(self, text="Next", message="System: navigate to the next search page.",
-                                    status_container=self.status_bar, status_msg=self.status)
+        self.forward = ColorButtons(self, text="Next",
+                                    message="System: navigate to the next search page.", status=self.status_set)
 
         self.home_btn.bind("<Button-1>", lambda arg=0: self.switch_page(2))
         self.news.bind("<Button-1>", lambda arg=0: self.switch_page(0))
         self.images.bind("<Button-1>", lambda arg=1: self.switch_page(1))
 
-        self.search_btn = ColorButtons(self, text="Search", message="Initiate a search query for <keyword>.",
-                                       status_container=self.status_bar,
-                                       status_msg=self.status)
-        self.bored = ColorButtons(self, text="I'm Feeling Bored", message="No idea what to search for? Let me help!",
-                                  status_container=self.status_bar,
-                                  status_msg=self.status)
+        self.search_btn = ColorButtons(self, text="Search",
+                                       message="Initiate a search query for <keyword>.", status=self.status_set)
+        self.bored = ColorButtons(self, text="I'm Feeling Bored",
+                                  message="No idea what to search for? Let me help!", status=self.status_set)
 
         self.bored.bind("<Button-1>", self.random_search)
 
@@ -143,6 +144,8 @@ class Main(tk.Frame):
         alex_response = requests.get("http://text-to-words.herokuapp.com/get_words/" + keyword)
         alex_response = alex_response.json()["words"]
 
+        print("Alex Response: ", alex_response)
+
         for x in alex_response:
             word_list = alex_response[x]
             for y in word_list:
@@ -164,6 +167,7 @@ class Main(tk.Frame):
 
         if country != self.toolbar.get_countries()[0][0]:
             url = 'https://newsapi.org/v2/top-headlines?country=' + country + "&apiKey=" + key
+            self.toolbar.set_en()
 
         temp_news = []
 
@@ -187,7 +191,8 @@ class Main(tk.Frame):
         key = "563492ad6f91700001000001ecab8f7b0b9f4371b013fa9bc225c984"
         url = "https://api.pexels.com/v1/search?query={}&per_page={}&page={}".format(keyword, 27, 1)
 
-        response = requests.get(url, headers={"Authorization": key, "X-Ratelimit-Remaining": "X-Ratelimit-Remaining"})
+        response = requests.get(url, headers={"Authorization": key,
+                                              "X-Ratelimit-Remaining": "X-Ratelimit-Remaining"})
 
         if response.json()["total_results"] != 0:
 
@@ -219,12 +224,12 @@ class Main(tk.Frame):
 
         for x in range(3):
             if page == 0 or page == 1:
+                self.frames[x].scrollbar.grid()
                 self.frames[page].redCanvas.bind_all("<MouseWheel>", self.frames[page].scroll_canvas)
                 self.forward.bind("<Button-1>", lambda root: self.frames[page].increase_page(num_entries, True))
                 self.back.bind("<Button-1>", lambda root: self.frames[page].increase_page(num_entries * -1, False))
             if page == x:
                 self.frames[x].redCanvas.grid()
-                self.frames[x].scrollbar.grid()
             else:
                 self.frames[x].redCanvas.grid_remove()
                 self.frames[x].scrollbar.grid_remove()
@@ -350,21 +355,23 @@ class NewsResults(Results):
             self.create_text(content, x, news_list)
 
     def create_text(self, content, entry_num, news_list):
-        # add title
+        font_color = self.root.toolbar.get_color()
+
+        # add the article's title to the entry (i.e. canvas)
         title = self.news_canvas[entry_num].create_text(5, 25, text=content[0], anchor='nw', width=600,
-                                                        fill="black", font=("Arial", 10, "bold"))
+                                                        fill=font_color, font=("Arial", 10, "bold"))
 
-        # date
+        # add the date that the article was published to the entry (i.e. canvas)
         date = self.news_canvas[entry_num].create_text(5, 60, text=content[1], anchor='nw', width=600,
-                                                       fill="black", font=("Arial", 8, "normal"))
+                                                       fill=font_color, font=("Arial", 8, "normal"))
 
-        # add source
+        # add the article source to the entry (i.e. canvas)
         source = self.news_canvas[entry_num].create_text(5, 75, text="Source: " + content[2], anchor='nw', width=600,
-                                                         fill="black", font=("Arial", 8, "normal"))
+                                                         fill=font_color, font=("Arial", 8, "normal"))
 
-        # add content
+        # add the article's abstract to the entry (i.e. canvas)
         abstract = self.news_canvas[entry_num].create_text(5, 105, text=content[3], anchor='nw', width=600,
-                                                          fill="black")
+                                                           fill=font_color)
 
         self.canvas_objs.extend((title, date, source, abstract))
 
@@ -378,7 +385,7 @@ class NewsResults(Results):
         arg.destroy()
 
     def mouse_in(self, event, widget):
-        widget["cursor"] = "@icons8-hand-cursor-_2_.cur"
+        widget["cursor"] = "@mario.ani"
 
 
 class ImageResults(Results):
@@ -418,32 +425,36 @@ class ImageResults(Results):
         for x in range(9):
             self.images_canvas[x].delete("all")
             if (self.start + x) < len(img_set):
+                raw_file = img_set[self.start + x]
                 img = ImageTk.PhotoImage(img_set[self.start + x])
                 self.images_canvas[x].create_image(0, 0, image=img)
-                self.images_canvas[x].bind("<Button-1>", lambda event, arg=img: self.enlarge_images(event, arg))
+                self.images_canvas[x].bind("<Button-1>", lambda event,
+                                                                arg=(img, raw_file): self.enlarge_images(event, arg))
                 self.images_canvas[x].bind("<Enter>",
                                            lambda event, arg=self.images_canvas[x]: self.mouse_in(event, arg))
 
     def enlarge_images(self, event, arg):
         image_window = tk.Toplevel(self)
-        image_window.geometry(self.find_size())
+        image_window.geometry(self.find_img_size(arg))
         image_window.resizable(False, False)
+        image_window.iconbitmap("logo64.ico")
 
-        image_label = tk.Label(image_window, image=arg)
+        image_label = tk.Label(image_window, image=arg[0])
         image_label.grid(row=0, column=0)
         image_label.bind("<Button-1>", lambda event, arg=image_window: self.close_image(event, arg))
         image_label.bind("<Enter>", lambda event, arg=image_label: self.mouse_in(event, arg))
 
-    def find_size(self):
-        size = self.root.toolbar.get_image_var()
-        dimensions = {"small": "400x200", "medium": "600x400", "large": "800x600"}
-        return dimensions[size]
+    def find_img_size(self, img):
+        width = img[1].size[0]
+        height = img[1].size[1]
+        size = "{width}x{height}".format(width=width, height=height)
+        return size
 
     def close_image(self, event, arg):
         arg.destroy()
 
     def mouse_in(self, event, widget):
-        widget["cursor"] = "@icons8-hand-cursor-_2_.cur"
+        widget["cursor"] = "@mario.ani"
 
 
 class Toolbar(tk.Menu):
@@ -451,6 +462,9 @@ class Toolbar(tk.Menu):
         super().__init__(root)
         self.menu = tk.Menu(self)
         self.root = root
+
+        print('ho')
+        print(self.root)
 
         self.search_history = []
         self.countries = [("All", "All"), ("Australia", "au"), ("Brazil", "br"), ("Canada", "ca"), ("China", "zh"),
@@ -489,11 +503,11 @@ class Toolbar(tk.Menu):
         self.languages.set(1)
         self.image_var.set("medium")
         self.color = tk.StringVar()
-        self.color.set(0)
+        self.color.set("black")
 
-        self.color_mode.add_radiobutton(label="Light", value=0, variable=self.color,
+        self.color_mode.add_radiobutton(label="Light", value="black", variable=self.color,
                                         command=lambda: self.change_theme(0))
-        self.color_mode.add_radiobutton(label="Dark", value=1, variable=self.color,
+        self.color_mode.add_radiobutton(label="Dark", value="white", variable=self.color,
                                         command=lambda: self.change_theme(1))
 
         self.advanced = tk.Menu(self.menu, tearoff=0)
@@ -501,12 +515,12 @@ class Toolbar(tk.Menu):
 
         self.themes = tk.Menu(self.advanced, tearoff=0)
 
-        self.advanced.add_cascade(label="Top News By Location", menu=self.themes)
+        self.advanced.add_cascade(label="News By Location", menu=self.themes)
         self.advanced.add_separator()
 
         for x in range(len(self.countries)):
             self.themes.add_radiobutton(label=self.countries[x][0], value=self.countries[x][1],
-                                        variable=self.themes_var)
+                                        variable=self.themes_var, command=lambda: self.set_en())
 
         self.image_sizes = tk.Menu(self.advanced, tearoff=0)
         self.image_sizes.add_radiobutton(label="Small", value="small", variable=self.image_var)
@@ -543,6 +557,12 @@ class Toolbar(tk.Menu):
     def get_image_var(self):
         return self.image_var.get()
 
+    def get_color(self):
+        return self.color.get()
+
+    def set_en(self):
+        self.languages.set(1)
+
     def set_language(self, language):
         self.themes_var.set(self.countries[0][0])
         self.root.set_language(language)
@@ -563,6 +583,7 @@ class Toolbar(tk.Menu):
 
         confirm_screen.geometry("175x50+{x}+{y}".format(x=root_x, y=root_y))
         confirm_screen.resizable(False, False)
+        confirm_screen.iconbitmap("logo64.ico")
         confirm_screen.transient(self.root)
 
         confirm_frame = tk.Frame(confirm_screen)
@@ -571,13 +592,12 @@ class Toolbar(tk.Menu):
         confirm_msg = tk.Label(confirm_frame, text="Ready to clear all search history?")
         confirm_msg.grid(row=0, column=0, columnspan=2)
 
-        cancel_btn = ColorButtons(confirm_frame, "Cancel operation.", self.root.status_bar,
-                                  self.root.status, text="Cancel")
+        cancel_btn = ColorButtons(confirm_frame, message="Cancel operation.", text="Cancel",
+                                  status=self.root.status_set)
         cancel_btn.bind("<Button-1>", lambda event, screen=confirm_screen: self.cancel(screen))
         cancel_btn.grid(row=1, column=0, sticky=tk.SW, padx=(10, 0), pady=0)
 
-        ok_btn = ColorButtons(confirm_frame, "Confirm operation.", self.root.status_bar,
-                              self.root.status, text="Confirm")
+        ok_btn = ColorButtons(confirm_frame, message="Confirm operation.", text="Confirm", status=self.root.status_set)
         ok_btn.grid(row=1, column=1, sticky=tk.SE, padx=(0, 10), pady=0)
         ok_btn.bind("<Button-1>", lambda event, screen=confirm_screen: self.ok(screen))
 
@@ -618,8 +638,8 @@ class Toolbar(tk.Menu):
         copyright = tk.Label(about_container, text="Copyright 2021 by Daniel Yu", fg="white", bg="#202020")
         copyright.grid(row=2, column=0)
 
-        ok = ColorButtons(about_container, "Information regarding software version and creator.", self.root.status_bar,
-                          self.root.status, text="Ok")
+        ok = ColorButtons(about_container, message="Information regarding software version and creator.",
+                          text="Ok", status=self.root.status_set)
 
         ok.grid(row=3, column=0, sticky=tk.SE, padx=(0, 10), pady=(10, 10))
         ok.bind("<Button-1>", lambda event, screen=about: self.cancel(screen))
@@ -659,6 +679,10 @@ class Toolbar(tk.Menu):
             for canvas in self.root.image_results.images_canvas:
                 canvas["background"] = "white"
 
+            for canvas in self.root.news_results.news_canvas:
+                for item in self.root.news_results.canvas_objs:
+                    canvas.itemconfig(item, fill="black")
+
             for button in self.root.buttons:
                 button["background"] = "#F6FFEE"
                 button.set_color("black", "#F6FFEE", "#CCFFCC")
@@ -686,10 +710,14 @@ class Toolbar(tk.Menu):
             self.root.image_results.blueCanvas["background"] = "#202020"
 
             for canvas in self.root.news_results.news_canvas:
-                canvas["background"] = "white"
+                canvas["background"] = "#202020"
+
+            for canvas in self.root.news_results.news_canvas:
+                for item in self.root.news_results.canvas_objs:
+                    canvas.itemconfig(item, fill="white")
 
             for canvas in self.root.image_results.images_canvas:
-                canvas["background"] = "white"
+                canvas["background"] = "#202020"
 
             for button in self.root.buttons:
                 button["background"] = "#29CB66"
@@ -710,10 +738,11 @@ class Messages:
 
 
 class ColorButtons(tk.Button):
-    def __init__(self, event, message, status_container, status_msg, **kw):  # kw for all extra arguments
+    def __init__(self, event, message, status, **kw):
         tk.Button.__init__(self, event, **kw)
-        self.status_container = status_container
-        self.status = status_msg
+
+        self.status_container = status[0]
+        self.status = status[1]
         self.status_message = "Status: "
         self.default = True
 
@@ -736,6 +765,7 @@ class ColorButtons(tk.Button):
         else:
             self["background"] = self.bg_default
             self.default = True
+        time.sleep(0.01)
 
     def set_color(self, fg, bg_default, bg_new):
         self.fg = fg
@@ -746,6 +776,7 @@ class ColorButtons(tk.Button):
 class Tutorial(tk.Toplevel):
     def __init__(self, root):
         tk.Toplevel.__init__(self, root)
+        self.root = root
 
         # find parent window's position
         x = root.winfo_x() + 250
@@ -763,13 +794,13 @@ class Tutorial(tk.Toplevel):
         self.bg = tk.Canvas(self.main, width=500, height=350, bg="green", bd=0, highlightthickness=0)
         self.bg.grid(row=0, column=0, columnspan=3)
 
-        self.cancel = ColorButtons(self.main, "Exit tutorial.", root.status_bar, root.status, text="Ok")
+        self.cancel = ColorButtons(self.main, "Exit tutorial.", text="Ok", status=self.root.status_set)
         self.cancel.grid(row=0, column=2, sticky=tk.S)
 
-        self.next = ColorButtons(self.main, "Next tip.", root.status_bar, root.status, text="Next")
+        self.next = ColorButtons(self.main, "Next tip.", text="Next", status=self.root.status_set)
         self.next.grid(row=0, column=1, sticky=tk.S)
 
-        self.previous = ColorButtons(self.main, "Previous tip.", root.status_bar, root.status, text="Previous")
+        self.previous = ColorButtons(self.main, "Previous tip.", text="Previous", status=self.root.status_set)
         self.previous.grid(row=0, column=0, sticky=tk.S)
 
         self.count = 1
@@ -795,6 +826,14 @@ class Tutorial(tk.Toplevel):
         img2 = "test{num}.jpg".format(num=self.count)
         self.img = ImageTk.PhotoImage(Image.open(img2).resize((500, 350)))
         self.bg.itemconfig(self.bg_image, image=self.img)
+
+
+class NewWindow(tk.Toplevel):
+    def __init__(self, root, **kw):
+        tk.Toplevel.__init__(self, root, **kw)
+
+        self.status_bar = root.status_bar
+        self.status = root.status
 
 
 if __name__ == "__main__":

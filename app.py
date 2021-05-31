@@ -24,11 +24,10 @@ def scraper(route, method):
         result = requests.get(my_url)
         package = result.content
 
+        # assign the parser for BeautifulSoup
         soup = BeautifulSoup(package, "html.parser")
-        # find all paragraphs under the div element that has this specific ID
 
-        # print(soup)
-
+        # find all span and p tags in elements that has the id "bodyContent"
         lang = soup.find(id="bodyContent").find_all("span")
         body = soup.find(id="bodyContent").find_all("p")
 
@@ -88,11 +87,7 @@ def get_data(keyword):
     return json_data
 
 
-# the user must provide the "domain" and "endpoint" of the wiki url
-# for example: http://127.0.0.1:5000/get_url/wikipedia.org/Nintendo
-# in this case, domain = wikipedia.org & endpoint is Nintendo
-# so user must format the url to be: wikipedia.org/<endpoint>
-# Can Alex help format actual urls into this format to use my service?
+# user provide a website's domain and endpoint for the domain and endpoint placeholders, respectively
 @app.route('/get_url/<string:domain>/<string:endpoint>')
 @cross_origin()
 def get_data2(domain, endpoint):
