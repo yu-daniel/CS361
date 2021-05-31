@@ -1,7 +1,7 @@
 import tkinter as tk
-import requests  # handle HTTP requests
+import requests                 # handle HTTP requests
 from PIL import ImageTk, Image  # for embedding images to Python/Tkinter
-from io import BytesIO  # similar to previous
+from io import BytesIO          # similar to previous
 import random
 import webbrowser
 from dateutil import parser
@@ -12,111 +12,46 @@ import time
 class Main(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
-        self.grid()  # using Tkinter's grid system over pack
+        self.grid()
         self.language = "en"
         self.root = root
 
-        # add access to status messages
         self.messenger = Messages()
-        self.status_message = self.messenger.default
-
-        # add status bar
-        self.status_container = tk.Frame(relief="groove", borderwidth="2")
-        self.status_bar = tk.Canvas(master=self.status_container, width=652, height=15)
-        # self.status = tk.Label(self.status_container2, text=self.status_message, fg="#606060")
-        self.status = self.status_bar.create_text(10, 0, anchor="nw", text=self.status_message, fill="#606060")
-        self.status_set = [self.status_bar, self.status]
-
-        # initiate the main toolbar
-
         self.toolbar = Toolbar(self)
-        root.config(menu=self.toolbar)
 
-        # add buttons to the UI
-        self.home_btn = ColorButtons(self, text="Home",
-                                     message="System: return to the Home page.", status=self.status_set)
+        self.status_container = StatusField(self)
+        self.status_set = [self.status_container.status_bar, self.status_container.status]
 
-        self.news = ColorButtons(self, text="News",
-                                 message="System: search <keyword> for the latest news articles.",
-                                 status=self.status_set)
-
-        self.images = ColorButtons(self, text="Images",
-                                   message="System: explore current images for <keyword>.", status=self.status_set)
-
-        self.back = ColorButtons(self, text="Previous",
-                                 message="System: navigate to the previous search page.", status=self.status_set)
-
-        self.forward = ColorButtons(self, text="Next",
-                                    message="System: navigate to the next search page.", status=self.status_set)
-
-        self.home_btn.bind("<Button-1>", lambda arg=0: self.switch_page(2))
-        self.news.bind("<Button-1>", lambda arg=0: self.switch_page(0))
-        self.images.bind("<Button-1>", lambda arg=1: self.switch_page(1))
-
-        self.search_btn = ColorButtons(self, text="Search",
-                                       message="Initiate a search query for <keyword>.", status=self.status_set)
-        self.bored = ColorButtons(self, text="I'm Feeling Bored",
-                                  message="No idea what to search for? Let me help!", status=self.status_set)
-
-        self.bored.bind("<Button-1>", self.random_search)
-
-        # RESULTS AREA
-        self.container = tk.Frame(self, bg="black")
-
-        self.back.grid(row=0, column=4, sticky=tk.W, padx=3, pady=7)
-        self.forward.grid(row=0, column=5, sticky=tk.W, padx=3, pady=7)
-
+        self.search_set = SearchField(self)
         self.image_results = ImageResults(self)
         self.news_results = NewsResults(self)
         self.home = Home(self)
-
-        # add search field
-        self.search = tk.Entry(self, width=100, fg="#606060")
-        self.search.insert(0, "Enter <keyword> to search...")
-        self.search.bind("<Button-1>", self.search_text)  # bind mouse click to search field's placeholder
-        self.search_btn.bind("<Button-1>", self.click_search)
-
-        self.search.bind("<Enter>", lambda event, arg=self.messenger.search_field: self.update_message(arg))
-        self.search.bind("<Leave>", lambda event, arg=self.messenger.default: self.update_message(arg))
-
-        # position of objects (buttons, search entry, labels)
-        self.home_btn.grid(row=0, column=0, sticky=tk.W, padx=(10, 3), pady=7)
-        self.news.grid(row=0, column=1, sticky=tk.W, padx=3, pady=7)
-        self.images.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
-        self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
-
-        # add search field, search button, and search results position
-        self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
-        self.search_btn.grid(row=1, column=101, sticky=tk.W, padx=(0, 10))
-
-        # position of status bar
-        self.status_container.grid(row=3, column=0, columnspan=102, sticky=tk.SW, padx=(10, 0), pady=(5, 5))
-        self.status_bar.grid(row=0, column=0, columnspan=102, sticky=tk.SW, padx=(0, 0), pady=(0, 0))
-
         self.frames = [self.news_results, self.image_results, self.home]
-        self.buttons = [self.home_btn, self.news, self.images, self.back, self.forward, self.search_btn, self.bored]
+
+        self.root.config(menu=self.toolbar)
+
 
     def set_language(self, language):
         self.language = language
 
     def search_text(self, event):
-        placeholder = self.search.get()
+        placeholder = self.search_set.search.get()
 
         if placeholder == "":
             root.focus()
             return
 
         elif placeholder == "Enter <keyword> to search...":
-            self.search.delete(0, tk.END)
+            self.search_set.search.delete(0, tk.END)
             root.focus()
 
         elif placeholder != "Enter <keyword> to search...":
-            self.search.delete(0, tk.END)
-            self.search.insert(0, "Enter <keyword> to search...")
+            self.search_set.search.delete(0, tk.END)
+            self.search_set.search.insert(0, "Enter <keyword> to search...")
             root.focus()
 
     def click_search(self, event):
-        keyword = self.search.get()
+        keyword = self.search_set.search.get()
 
         if keyword == "Enter <keyword> to search...":
             return
@@ -127,8 +62,8 @@ class Main(tk.Frame):
             self.news_api(keyword)
             self.image_api(keyword)
 
-            self.search.delete(0, tk.END)
-            self.search.insert(0, "Enter <keyword> to search...")
+            self.search_set.search.delete(0, tk.END)
+            self.search_set.search.insert(0, "Enter <keyword> to search...")
             root.focus()
 
         self.switch_page(0)
@@ -179,7 +114,7 @@ class Main(tk.Frame):
                 temp_news.append(results["articles"][x])
             self.news_results.set_news(temp_news)
         else:
-            self.status_bar.itemconfig(self.status, text="Results found: 0")
+            self.status_container.status_bar.itemconfig(self.status_container.status, text="Results found: 0")
 
     def image_api(self, keyword):
 
@@ -206,12 +141,12 @@ class Main(tk.Frame):
                 temp_images.append(im1)
             self.image_results.set_images(temp_images)
         else:
-            self.status_bar.itemconfig(self.status, text="Results found: 0")
+            self.status_container.status_bar.itemconfig(self.status_container.status, text="Results found: 0")
 
     def update_message(self, widget):
         self.messenger.set_current(widget)
-        self.status_message = self.messenger.get_current()
-        self.status_bar.itemconfig(self.status, text=self.status_message)
+        status_message = self.messenger.get_current()
+        self.status_container.status_bar.itemconfig(self.status_container.status, text=status_message)
 
     def switch_page(self, page):
         frame = self.frames[page]
@@ -226,8 +161,10 @@ class Main(tk.Frame):
             if page == 0 or page == 1:
                 self.frames[x].scrollbar.grid()
                 self.frames[page].redCanvas.bind_all("<MouseWheel>", self.frames[page].scroll_canvas)
-                self.forward.bind("<Button-1>", lambda root: self.frames[page].increase_page(num_entries, True))
-                self.back.bind("<Button-1>", lambda root: self.frames[page].increase_page(num_entries * -1, False))
+                self.search_set.forward.bind("<Button-1>",
+                                             lambda root: self.frames[page].increase_page(num_entries, True))
+                self.search_set.back.bind("<Button-1>",
+                                          lambda root: self.frames[page].increase_page(num_entries * -1, False))
             if page == x:
                 self.frames[x].redCanvas.grid()
             else:
@@ -239,13 +176,88 @@ class Main(tk.Frame):
         webbrowser.open_new(arg)
 
 
+class StatusField(tk.Frame):
+    def __init__(self, root):
+        tk.Frame.__init__(self, root)
+        self.root = root
+        self["relief"] = "groove"
+        self["borderwidth"] = "2"
+        self.status_message = self.root.messenger.get_current()
+
+        self.status_bar = tk.Canvas(self, width=655, height=15)
+        self.status_bar.grid(row=0, column=0, columnspan=102, sticky=tk.SW, padx=(0, 0), pady=(0, 0))
+        self.status = self.status_bar.create_text(10, 0, anchor="nw", text=self.status_message, fill="#606060")
+
+        self.grid(row=3, column=0, columnspan=102, sticky=tk.SW, padx=(10, 0), pady=(5, 5))
+
+
+class SearchField(tk.Frame):
+    def __init__(self, root):
+        tk.Frame.__init__(self, root)
+        self.root = root
+        self.status_set = root.status_set
+
+        self.home_btn = ColorButtons(self, text="Home",
+                                     message="System: return to the Home page.", status=self.status_set)
+
+        self.news = ColorButtons(self, text="News",
+                                 message="System: search <keyword> for the latest news articles.",
+                                 status=self.status_set)
+
+        self.images = ColorButtons(self, text="Images",
+                                   message="System: explore current images for <keyword>.", status=self.status_set)
+
+        self.back = ColorButtons(self, text="Previous",
+                                 message="System: navigate to the previous search page.", status=self.status_set)
+
+        self.forward = ColorButtons(self, text="Next",
+                                    message="System: navigate to the next search page.", status=self.status_set)
+
+        self.search_btn = ColorButtons(self, text="Search",
+                                       message="Initiate a search query for <keyword>.", status=self.status_set)
+        self.bored = ColorButtons(self, text="I'm Feeling Bored",
+                                  message="No idea what to search for? Let me help!", status=self.status_set)
+
+        self.search = tk.Entry(self, width=100, fg="#606060")
+
+        self.grid(row=0, column=0, columnspan=102, sticky=tk.W)
+
+        # position of objects (buttons, search entry, labels)
+        self.home_btn.grid(row=0, column=0, sticky=tk.W, padx=(10, 3), pady=7)
+        self.news.grid(row=0, column=1, sticky=tk.W, padx=3, pady=7)
+        self.images.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
+        self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
+        self.back.grid(row=0, column=4, sticky=tk.W, padx=3, pady=7)
+        self.forward.grid(row=0, column=5, sticky=tk.W, padx=3, pady=7)
+
+        # add search field, search button, and search results position
+        self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
+        self.search_btn.grid(row=1, column=101, sticky=tk.W, padx=(0, 10))
+
+
+        # add search field
+        self.search.insert(0, "Enter <keyword> to search...")
+        self.search.bind("<Button-1>", self.root.search_text)  # bind mouse click to search field's placeholder
+        self.search_btn.bind("<Button-1>", self.root.click_search)
+
+        self.search.bind("<Enter>", lambda event, arg=self.root.messenger.search_field: self.root.update_message(arg))
+        self.search.bind("<Leave>", lambda event, arg=self.root.messenger.default: self.root.update_message(arg))
+
+        self.home_btn.bind("<Button-1>", lambda arg=0: self.root.switch_page(2))
+        self.news.bind("<Button-1>", lambda arg=0: self.root.switch_page(0))
+        self.images.bind("<Button-1>", lambda arg=1: self.root.switch_page(1))
+        self.bored.bind("<Button-1>", self.root.random_search)
+
+        self.buttons = [self.home_btn, self.news, self.images, self.back, self.forward, self.search_btn, self.bored]
+
+
 class Home(tk.Frame):
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self["borderwidth"] = 1
         self["relief"] = 'groove'
 
-        self.redCanvas = tk.Canvas(root, width=650, height=500, bg="#F9F9F9", bd=1, highlightthickness=2,
+        self.redCanvas = tk.Canvas(root, width=655, height=500, bg="#F9F9F9", bd=1, highlightthickness=2,
                                    highlightbackground="green")
         self.scrollbar = tk.Scrollbar(root, command=self.redCanvas.yview, orient=tk.VERTICAL)
 
@@ -275,7 +287,7 @@ class Results(tk.Frame):
 
         # position the 'red' frame and the scrollbar
         self.redCanvas.grid(row=2, column=0, columnspan=102, sticky=tk.NW, padx=(10, 0), pady=7)
-        self.scrollbar.grid(row=2, column=101, columnspan=102, sticky=tk.NS, padx=(10, 0), pady=7)
+        self.scrollbar.grid(row=2, column=95, columnspan=102, sticky=tk.NS, padx=(6, 0), pady=7)
 
         # listen for events that would change the size or drag (i.e scroll) the 'blue' canvas
         self.redCanvas.bind("<Configure>", self.update_scrollbar)
@@ -312,8 +324,8 @@ class NewsResults(Results):
             news.grid(row=i, column=0, sticky=tk.W, padx=(10, 15), pady=(10, 15))
             self.news_canvas.append(news)
 
-        root.forward.bind("<Button-1>", lambda root: self.increase_page(5, True))
-        root.back.bind("<Button-1>", lambda root: self.increase_page(-5, False))
+        self.root.search_set.forward.bind("<Button-1>", lambda root: self.increase_page(5, True))
+        self.root.search_set.back.bind("<Button-1>", lambda root: self.increase_page(-5, False))
 
     def increase_page(self, num, increase):
         if self.end <= 15 and increase is True:
@@ -462,9 +474,6 @@ class Toolbar(tk.Menu):
         super().__init__(root)
         self.menu = tk.Menu(self)
         self.root = root
-
-        print('ho')
-        print(self.root)
 
         self.search_history = []
         self.countries = [("All", "All"), ("Australia", "au"), ("Brazil", "br"), ("Canada", "ca"), ("China", "zh"),
@@ -655,19 +664,22 @@ class Toolbar(tk.Menu):
             self.root["bg"] = "#F0F0F0"
             self.root.root["bg"] = "#F0F0F0"
 
-            self.root.status_bar.itemconfig(self.root.status, fill="#606060")
+            self.root.search_set["bg"] = "#F0F0F0"
+
+
+            self.root.status_container.status_bar.itemconfig(self.root.status_container.status, fill="#606060")
 
             self.root.status_container["bg"] = "#F0F0F0"
             self.root.status_container["bd"] = 1
             self.root.status_container["highlightthickness"] = 0
             self.root.status_container["highlightbackground"] = "#F0F0F0"
 
-            self.root.status_bar["bg"] = "#F0F0F0"
-            self.root.status_bar["bd"] = 1
-            self.root.status_bar["highlightthickness"] = 1
+            self.root.status_container.status_bar["bg"] = "#F0F0F0"
+            self.root.status_container.status_bar["bd"] = 1
+            self.root.status_container.status_bar["highlightthickness"] = 1
 
-            self.root.search["fg"] = "#606060"
-            self.root.search["background"] = "#F0F0F0"
+            self.root.search_set.search["fg"] = "#606060"
+            self.root.search_set.search["background"] = "#F0F0F0"
 
             self.root.home.redCanvas["background"] = "white"
             self.root.news_results.blueCanvas["background"] = "white"
@@ -683,7 +695,7 @@ class Toolbar(tk.Menu):
                 for item in self.root.news_results.canvas_objs:
                     canvas.itemconfig(item, fill="black")
 
-            for button in self.root.buttons:
+            for button in self.root.search_set.buttons:
                 button["background"] = "#F6FFEE"
                 button.set_color("black", "#F6FFEE", "#CCFFCC")
 
@@ -691,19 +703,21 @@ class Toolbar(tk.Menu):
             self.root["bg"] = "#202020"
             self.root.root["bg"] = "#202020"
 
-            self.root.status_bar.itemconfig(self.root.status, fill="#29CB66")
+            self.root.search_set["bg"] = "#202020"
+
+            self.root.status_container.status_bar.itemconfig(self.root.status_container.status, fill="#29CB66")
 
             self.root.status_container["bg"] = "#202020"
             self.root.status_container["bd"] = 1
             self.root.status_container["highlightthickness"] = 1
             self.root.status_container["highlightbackground"] = "#22A753"
 
-            self.root.status_bar["bg"] = "#202020"
-            self.root.status_bar["bd"] = 0
-            self.root.status_bar["highlightthickness"] = 0
+            self.root.status_container.status_bar["bg"] = "#202020"
+            self.root.status_container.status_bar["bd"] = 0
+            self.root.status_container.status_bar["highlightthickness"] = 0
 
-            self.root.search["fg"] = "#99FF99"
-            self.root.search["background"] = "#202020"
+            self.root.search_set.search["fg"] = "#99FF99"
+            self.root.search_set.search["background"] = "#202020"
 
             self.root.home.redCanvas["background"] = "#202020"
             self.root.news_results.blueCanvas["background"] = "#202020"
@@ -719,7 +733,7 @@ class Toolbar(tk.Menu):
             for canvas in self.root.image_results.images_canvas:
                 canvas["background"] = "#202020"
 
-            for button in self.root.buttons:
+            for button in self.root.search_set.buttons:
                 button["background"] = "#29CB66"
                 button.set_color("black", "#29CB66", "#FFFF99")
 
@@ -828,12 +842,7 @@ class Tutorial(tk.Toplevel):
         self.bg.itemconfig(self.bg_image, image=self.img)
 
 
-class NewWindow(tk.Toplevel):
-    def __init__(self, root, **kw):
-        tk.Toplevel.__init__(self, root, **kw)
 
-        self.status_bar = root.status_bar
-        self.status = root.status
 
 
 if __name__ == "__main__":
