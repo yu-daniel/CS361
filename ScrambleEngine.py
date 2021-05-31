@@ -16,7 +16,7 @@ class Main(tk.Frame):
         self.language = "en"
         self.root = root
 
-        self.messenger = Messages()
+        self.messenger = Messages(self)
         self.toolbar = Toolbar(self)
 
         self.status_container = StatusField(self)
@@ -35,25 +35,24 @@ class Main(tk.Frame):
         self.language = language
 
     def search_text(self, event):
-        placeholder = self.search_set.search.get()
+        keyword = self.search_set.search.get()
 
-        if placeholder == "":
+        if keyword == "":
             root.focus()
             return
 
-        elif placeholder == "Enter <keyword> to search...":
-            self.search_set.search.delete(0, tk.END)
-            root.focus()
+        self.search_set.search.delete(0, tk.END)
 
-        elif placeholder != "Enter <keyword> to search...":
-            self.search_set.search.delete(0, tk.END)
+        if keyword != self.search_set.get_tooltip():
             self.search_set.search.insert(0, "Enter <keyword> to search...")
-            root.focus()
+
+        root.focus()
+
 
     def click_search(self, event):
         keyword = self.search_set.search.get()
 
-        if keyword == "Enter <keyword> to search...":
+        if keyword == self.search_set.get_tooltip():
             return
         else:
 
@@ -68,6 +67,7 @@ class Main(tk.Frame):
 
         self.switch_page(0)
 
+
     def random_search(self, event):
 
         keywords = []
@@ -76,10 +76,8 @@ class Main(tk.Frame):
         num = random.randint(0, len(divided) - 1)
 
         keyword = divided[num]
-        alex_response = requests.get("http://text-to-words.herokuapp.com/get_words/" + keyword)
+        alex_response = requests.get("http://text-to-words.herokuapp.com/get_words/{k}".format(k=keyword))
         alex_response = alex_response.json()["words"]
-
-        print("Alex Response: ", alex_response)
 
         for x in alex_response:
             word_list = alex_response[x]
@@ -97,11 +95,11 @@ class Main(tk.Frame):
         key = "dde38eb277ba442caaaa89a152952773"
 
         country = self.toolbar.get_themes_var()
-
-        url = 'https://newsapi.org/v2/everything?q=' + keyword + "&apiKey=" + key + "&language=" + self.language
+        url = "https://newsapi.org/v2/everything?q=" \
+              "{k}&apiKey={key}&language={l}".format(k=keyword, key=key, l=self.language)
 
         if country != self.toolbar.get_countries()[0][0]:
-            url = 'https://newsapi.org/v2/top-headlines?country=' + country + "&apiKey=" + key
+            url = "https://newsapi.org/v2/top-headlines?country={c}&apiKey={k}".format(c=country, k=key)
             self.toolbar.set_en()
 
         temp_news = []
@@ -124,7 +122,8 @@ class Main(tk.Frame):
         size = self.toolbar.get_image_var()
 
         key = "563492ad6f91700001000001ecab8f7b0b9f4371b013fa9bc225c984"
-        url = "https://api.pexels.com/v1/search?query={}&per_page={}&page={}".format(keyword, 27, 1)
+        url = "https://api.pexels.com/v1/search?query=" \
+              "{k}&per_page={total}&page={pg_num}".format(k=keyword, total=27, pg_num=1)
 
         response = requests.get(url, headers={"Authorization": key,
                                               "X-Ratelimit-Remaining": "X-Ratelimit-Remaining"})
@@ -162,9 +161,9 @@ class Main(tk.Frame):
                 self.frames[x].scrollbar.grid()
                 self.frames[page].redCanvas.bind_all("<MouseWheel>", self.frames[page].scroll_canvas)
                 self.search_set.forward.bind("<Button-1>",
-                                             lambda root: self.frames[page].increase_page(num_entries, True))
+                                             lambda event: self.frames[page].increase_page(num_entries, True))
                 self.search_set.back.bind("<Button-1>",
-                                          lambda root: self.frames[page].increase_page(num_entries * -1, False))
+                                          lambda event: self.frames[page].increase_page(num_entries * -1, False))
             if page == x:
                 self.frames[x].redCanvas.grid()
             else:
@@ -172,7 +171,7 @@ class Main(tk.Frame):
                 self.frames[x].scrollbar.grid_remove()
         frame.tkraise()
 
-    def open_link(self, event, arg):
+    def open_link(self, arg):
         webbrowser.open_new(arg)
 
 
@@ -236,7 +235,8 @@ class SearchField(tk.Frame):
 
 
         # add search field
-        self.search.insert(0, "Enter <keyword> to search...")
+        self.tooltip = "Enter <keyword> to search..."
+        self.search.insert(0, self.tooltip)
         self.search.bind("<Button-1>", self.root.search_text)  # bind mouse click to search field's placeholder
         self.search_btn.bind("<Button-1>", self.root.click_search)
 
@@ -250,6 +250,8 @@ class SearchField(tk.Frame):
 
         self.buttons = [self.home_btn, self.news, self.images, self.back, self.forward, self.search_btn, self.bored]
 
+    def get_tooltip(self):
+        return self.tooltip
 
 class Home(tk.Frame):
     def __init__(self, root):
@@ -389,14 +391,14 @@ class NewsResults(Results):
 
         self.news_canvas[entry_num].grid(row=entry_num)
         self.news_canvas[entry_num].bind("<Button-1>",
-                                         lambda event, arg=news_list[entry_num]["url"]: self.root.open_link(event, arg))
+                                         lambda event, arg=news_list[entry_num]["url"]: self.root.open_link(arg))
         self.news_canvas[entry_num].bind("<Enter>",
-                                         lambda event, arg=self.news_canvas[entry_num]: self.mouse_in(event, arg))
+                                         lambda event, arg=self.news_canvas[entry_num]: self.mouse_in(arg))
 
-    def close_image(self, event, arg):
+    def close_image(self, arg):
         arg.destroy()
 
-    def mouse_in(self, event, widget):
+    def mouse_in(self, widget):
         widget["cursor"] = "@mario.ani"
 
 
@@ -441,11 +443,11 @@ class ImageResults(Results):
                 img = ImageTk.PhotoImage(img_set[self.start + x])
                 self.images_canvas[x].create_image(0, 0, image=img)
                 self.images_canvas[x].bind("<Button-1>", lambda event,
-                                                                arg=(img, raw_file): self.enlarge_images(event, arg))
+                                                                arg=(img, raw_file): self.enlarge_images(arg))
                 self.images_canvas[x].bind("<Enter>",
-                                           lambda event, arg=self.images_canvas[x]: self.mouse_in(event, arg))
+                                           lambda event, arg=self.images_canvas[x]: self.mouse_in(arg))
 
-    def enlarge_images(self, event, arg):
+    def enlarge_images(self, arg):
         image_window = tk.Toplevel(self)
         image_window.geometry(self.find_img_size(arg))
         image_window.resizable(False, False)
@@ -453,8 +455,8 @@ class ImageResults(Results):
 
         image_label = tk.Label(image_window, image=arg[0])
         image_label.grid(row=0, column=0)
-        image_label.bind("<Button-1>", lambda event, arg=image_window: self.close_image(event, arg))
-        image_label.bind("<Enter>", lambda event, arg=image_label: self.mouse_in(event, arg))
+        image_label.bind("<Button-1>", lambda event, arg=image_window: self.close_image(arg))
+        image_label.bind("<Enter>", lambda event, arg=image_label: self.mouse_in(arg))
 
     def find_img_size(self, img):
         width = img[1].size[0]
@@ -462,10 +464,10 @@ class ImageResults(Results):
         size = "{width}x{height}".format(width=width, height=height)
         return size
 
-    def close_image(self, event, arg):
+    def close_image(self, arg):
         arg.destroy()
 
-    def mouse_in(self, event, widget):
+    def mouse_in(self, widget):
         widget["cursor"] = "@mario.ani"
 
 
@@ -547,14 +549,13 @@ class Toolbar(tk.Menu):
         self.help = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Help", menu=self.help)
         self.help.add_command(label="Homepage",
-                              command=lambda: self.root.open_link(self.root, "https://github.com/yu-daniel/CS361"))
+                              command=lambda: self.root.open_link("https://github.com/yu-daniel/CS361"))
         self.help.add_command(label="Tutorial", command=self.show_tutorial)
 
         self.help.add_separator()
         self.help.add_command(label="About...", command=self.show_about)
 
     def show_tutorial(self):
-        # add tutorial
         Tutorial(self.root)
 
     def get_countries(self):
@@ -739,7 +740,8 @@ class Toolbar(tk.Menu):
 
 
 class Messages:
-    def __init__(self):
+    def __init__(self, root):
+        self.root = root
         self.default = "Status: "
         self.search_field = "System: enter a <keyword> to begin the search."
         self.current = self.default
@@ -752,8 +754,8 @@ class Messages:
 
 
 class ColorButtons(tk.Button):
-    def __init__(self, event, message, status, **kw):
-        tk.Button.__init__(self, event, **kw)
+    def __init__(self, root, message, status, **kwargs):
+        tk.Button.__init__(self, root, **kwargs)
 
         self.status_container = status[0]
         self.status = status[1]
