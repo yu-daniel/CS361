@@ -55,7 +55,6 @@ class Main(tk.Frame):
         if keyword == self.search_set.get_tooltip():
             return
         else:
-
             self.toolbar.add_search_history(keyword)
 
             self.news_api(keyword)
@@ -66,7 +65,6 @@ class Main(tk.Frame):
             root.focus()
 
         self.switch_page(0)
-
 
     def random_search(self, event):
 
@@ -116,8 +114,7 @@ class Main(tk.Frame):
 
     def image_api(self, keyword):
 
-        temp_images = []
-        images = []
+        temp_images, images = [], []
 
         size = self.toolbar.get_image_var()
 
@@ -179,8 +176,7 @@ class StatusField(tk.Frame):
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self.root = root
-        self["relief"] = "groove"
-        self["borderwidth"] = "2"
+        self["relief"], self["borderwidth"] = "groove", "2"
         self.status_message = self.root.messenger.get_current()
 
         self.status_bar = tk.Canvas(self, width=655, height=15)
@@ -193,29 +189,15 @@ class StatusField(tk.Frame):
 class SearchField(tk.Frame):
     def __init__(self, root):
         tk.Frame.__init__(self, root)
-        self.root = root
-        self.status_set = root.status_set
+        self.root, self.status_set = root, root.status_set
 
-        self.home_btn = ColorButtons(self, text="Home",
-                                     message="System: return to the Home page.", status=self.status_set)
-
-        self.news = ColorButtons(self, text="News",
-                                 message="System: search <keyword> for the latest news articles.",
-                                 status=self.status_set)
-
-        self.images = ColorButtons(self, text="Images",
-                                   message="System: explore current images for <keyword>.", status=self.status_set)
-
-        self.back = ColorButtons(self, text="Previous",
-                                 message="System: navigate to the previous search page.", status=self.status_set)
-
-        self.forward = ColorButtons(self, text="Next",
-                                    message="System: navigate to the next search page.", status=self.status_set)
-
-        self.search_btn = ColorButtons(self, text="Search",
-                                       message="Initiate a search query for <keyword>.", status=self.status_set)
-        self.bored = ColorButtons(self, text="I'm Feeling Bored",
-                                  message="No idea what to search for? Let me help!", status=self.status_set)
+        self.home_btn = ColorButtons(self)
+        self.news = ColorButtons(self)
+        self.images = ColorButtons(self)
+        self.back = ColorButtons(self)
+        self.forward = ColorButtons(self)
+        self.search_btn = ColorButtons(self)
+        self.bored = ColorButtons(self)
 
         self.search = tk.Entry(self, width=100, fg="#606060")
 
@@ -243,15 +225,36 @@ class SearchField(tk.Frame):
         self.search.bind("<Enter>", lambda event, arg=self.root.messenger.search_field: self.root.update_message(arg))
         self.search.bind("<Leave>", lambda event, arg=self.root.messenger.default: self.root.update_message(arg))
 
-        self.home_btn.bind("<Button-1>", lambda arg=0: self.root.switch_page(2))
-        self.news.bind("<Button-1>", lambda arg=0: self.root.switch_page(0))
-        self.images.bind("<Button-1>", lambda arg=1: self.root.switch_page(1))
+        self.home_btn.bind("<Button-1>", lambda event: self.root.switch_page(2))
+        self.news.bind("<Button-1>", lambda event: self.root.switch_page(0))
+        self.images.bind("<Button-1>", lambda event: self.root.switch_page(1))
         self.bored.bind("<Button-1>", self.root.random_search)
 
         self.buttons = [self.home_btn, self.news, self.images, self.back, self.forward, self.search_btn, self.bored]
+        self.assign_tooltip()
 
     def get_tooltip(self):
         return self.tooltip
+
+    def assign_tooltip(self):
+        context = {0: ("Home", "System: return to the Home page."),
+                   1: ("News", "System: search <keyword> for the latest news articles."),
+                   2: ("Images", "System: explore current images for <keyword>."),
+                   3: ("Previous", "System: navigate to the previous search page."),
+                   4: ("Next", "System: navigate to the next search page."),
+                   5: ("Search", "Initiate a search query for <keyword>."),
+                   6: ("I'm Feeling Bored", "No idea what to search for? Let me help!"),
+                   }
+
+        for num in range(len(self.buttons)):
+            text = context.get(num)[0]
+            message = context.get(num)[1]
+
+            self.buttons[num].config(text=text)
+            self.buttons[num].set_message(message)
+            self.buttons[num].set_status(self.status_set[0], self.status_set[1])
+
+
 
 class Home(tk.Frame):
     def __init__(self, root):
@@ -602,14 +605,29 @@ class Toolbar(tk.Menu):
         confirm_msg = tk.Label(confirm_frame, text="Ready to clear all search history?")
         confirm_msg.grid(row=0, column=0, columnspan=2)
 
-        cancel_btn = ColorButtons(confirm_frame, message="Cancel operation.", text="Cancel",
-                                  status=self.root.status_set)
+        cancel_btn = ColorButtons(confirm_frame)
         cancel_btn.bind("<Button-1>", lambda event, screen=confirm_screen: self.cancel(screen))
         cancel_btn.grid(row=1, column=0, sticky=tk.SW, padx=(10, 0), pady=0)
 
-        ok_btn = ColorButtons(confirm_frame, message="Confirm operation.", text="Confirm", status=self.root.status_set)
+        ok_btn = ColorButtons(confirm_frame)
         ok_btn.grid(row=1, column=1, sticky=tk.SE, padx=(0, 10), pady=0)
         ok_btn.bind("<Button-1>", lambda event, screen=confirm_screen: self.ok(screen))
+
+        self.update_btns([cancel_btn, ok_btn])
+
+    def update_btns(self, buttons):
+        context = {0: ("Cancel", "Cancel operation."),
+                   1: ("Confirm", "Confirm operation."),
+                   }
+
+        for num in range(buttons):
+            text = context.get(num)[0]
+            message = context.get(num)[1]
+
+            buttons[num].config(text=text)
+            buttons[num].set_message(message)
+            buttons[num].set_status(self.root.status_set[0], self.root.status_set[1])
+
 
     def ok(self, screen):
         history_total = self.searches.index("end")
@@ -648,11 +666,24 @@ class Toolbar(tk.Menu):
         copyright = tk.Label(about_container, text="Copyright 2021 by Daniel Yu", fg="white", bg="#202020")
         copyright.grid(row=2, column=0)
 
-        ok = ColorButtons(about_container, message="Information regarding software version and creator.",
-                          text="Ok", status=self.root.status_set)
+        ok = ColorButtons(about_container)
 
         ok.grid(row=3, column=0, sticky=tk.SE, padx=(0, 10), pady=(10, 10))
         ok.bind("<Button-1>", lambda event, screen=about: self.cancel(screen))
+
+        self.update_btns([ok])
+
+    def update_btns(self, buttons):
+        context = {0: ("Ok", "Information regarding software version and creator."),
+                   }
+
+        for num in range(len(buttons)):
+            text = context.get(num)[0]
+            message = context.get(num)[1]
+
+            buttons[num].config(text=text)
+            buttons[num].set_message(message)
+            buttons[num].set_status(self.root.status_set[0], self.root.status_set[1])
 
     def cancel(self, screen):
         screen.destroy()
@@ -754,12 +785,14 @@ class Messages:
 
 
 class ColorButtons(tk.Button):
-    def __init__(self, root, message, status, **kwargs):
+    def __init__(self, root, **kwargs):
         tk.Button.__init__(self, root, **kwargs)
 
-        self.status_container = status[0]
-        self.status = status[1]
-        self.status_message = "Status: "
+        self.tip_msg = None
+
+        self.status_canvas = None
+        self.status_item = None
+        self.default_msg = "Status: "
         self.default = True
 
         self.fg = None
@@ -768,12 +801,24 @@ class ColorButtons(tk.Button):
 
         self["background"] = self.bg_default
 
-        self.bind("<Enter>", lambda event, arg=message: self.update_message(arg))
-        self.bind("<Leave>", lambda event, arg=self.status_message: self.update_message(arg))
+        self.bind("<Enter>", lambda event, arg=0: self.update_message(arg))
+        self.bind("<Leave>", lambda event, arg=1: self.update_message(arg))
 
-    def update_message(self, widget):
-        self.status_message = widget
-        self.status_container.itemconfig(self.status, text=self.status_message)
+    def set_status(self, canvas, item):
+        self.status_canvas = canvas
+        self.status_item = item
+
+    def set_message(self, msg):
+        self.tip_msg = msg
+
+    def update_message(self, arg):
+        msg = ""
+        if arg == 0:
+            msg = self.tip_msg
+        elif arg == 1:
+            msg = self.default_msg
+
+        self.status_canvas.itemconfig(self.status_item, text=msg)
 
         if self.default:
             self["background"] = self.bg_hover
@@ -810,13 +855,13 @@ class Tutorial(tk.Toplevel):
         self.bg = tk.Canvas(self.main, width=500, height=350, bg="green", bd=0, highlightthickness=0)
         self.bg.grid(row=0, column=0, columnspan=3)
 
-        self.cancel = ColorButtons(self.main, "Exit tutorial.", text="Ok", status=self.root.status_set)
+        self.cancel = ColorButtons(self.main)
         self.cancel.grid(row=0, column=2, sticky=tk.S)
 
-        self.next = ColorButtons(self.main, "Next tip.", text="Next", status=self.root.status_set)
+        self.next = ColorButtons(self.main,)
         self.next.grid(row=0, column=1, sticky=tk.S)
 
-        self.previous = ColorButtons(self.main, "Previous tip.", text="Previous", status=self.root.status_set)
+        self.previous = ColorButtons(self.main)
         self.previous.grid(row=0, column=0, sticky=tk.S)
 
         self.count = 1
@@ -829,6 +874,8 @@ class Tutorial(tk.Toplevel):
         self.cancel.bind("<Button-1>", lambda event, root=self: self.close(root))
         self.next.bind("<Button-1>", lambda event, root=self, increase=True: self.change_tip(root, increase))
         self.previous.bind("<Button-1>", lambda event, root=self, increase=False: self.change_tip(root, increase))
+
+        self.update_btns([self.cancel, self.next, self.previous])
 
     def close(self, root):
         root.destroy()
@@ -843,7 +890,19 @@ class Tutorial(tk.Toplevel):
         self.img = ImageTk.PhotoImage(Image.open(img2).resize((500, 350)))
         self.bg.itemconfig(self.bg_image, image=self.img)
 
+    def update_btns(self, buttons):
+        context = {0: ("Ok", "Exit tutorial."),
+                   1: ("Next", "Next tip."),
+                   2: ("Previous", "Previous tip."),
+                   }
 
+        for num in range(len(buttons)):
+            text = context.get(num)[0]
+            message = context.get(num)[1]
+
+            buttons[num].config(text=text)
+            buttons[num].set_message(message)
+            buttons[num].set_status(self.root.status_set[0], self.root.status_set[1])
 
 
 
