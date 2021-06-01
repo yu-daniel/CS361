@@ -30,7 +30,6 @@ class Main(tk.Frame):
 
         self.root.config(menu=self.toolbar)
 
-
     def set_language(self, language):
         self.language = language
 
@@ -47,7 +46,6 @@ class Main(tk.Frame):
             self.search_set.search.insert(0, "Enter <keyword> to search...")
 
         root.focus()
-
 
     def click_search(self, event):
         keyword = self.search_set.search.get()
@@ -171,6 +169,15 @@ class Main(tk.Frame):
     def open_link(self, arg):
         webbrowser.open_new(arg)
 
+    def update_btns(self, buttons, data):
+        for num in range(len(buttons)):
+            text = data.get(num)[0]
+            message = data.get(num)[1]
+
+            buttons[num].config(text=text)
+            buttons[num].set_message(message)
+            buttons[num].set_status(self.status_set[0], self.status_set[1])
+
 
 class StatusField(tk.Frame):
     def __init__(self, root):
@@ -230,13 +237,6 @@ class SearchField(tk.Frame):
         self.images.bind("<Button-1>", lambda event: self.root.switch_page(1))
         self.bored.bind("<Button-1>", self.root.random_search)
 
-        self.buttons = [self.home_btn, self.news, self.images, self.back, self.forward, self.search_btn, self.bored]
-        self.assign_tooltip()
-
-    def get_tooltip(self):
-        return self.tooltip
-
-    def assign_tooltip(self):
         context = {0: ("Home", "System: return to the Home page."),
                    1: ("News", "System: search <keyword> for the latest news articles."),
                    2: ("Images", "System: explore current images for <keyword>."),
@@ -246,14 +246,11 @@ class SearchField(tk.Frame):
                    6: ("I'm Feeling Bored", "No idea what to search for? Let me help!"),
                    }
 
-        for num in range(len(self.buttons)):
-            text = context.get(num)[0]
-            message = context.get(num)[1]
+        self.buttons = [self.home_btn, self.news, self.images, self.back, self.forward, self.search_btn, self.bored]
+        self.root.update_btns(self.buttons, context)
 
-            self.buttons[num].config(text=text)
-            self.buttons[num].set_message(message)
-            self.buttons[num].set_status(self.status_set[0], self.status_set[1])
-
+    def get_tooltip(self):
+        return self.tooltip
 
 
 class Home(tk.Frame):
@@ -613,20 +610,10 @@ class Toolbar(tk.Menu):
         ok_btn.grid(row=1, column=1, sticky=tk.SE, padx=(0, 10), pady=0)
         ok_btn.bind("<Button-1>", lambda event, screen=confirm_screen: self.ok(screen))
 
-        self.update_btns([cancel_btn, ok_btn])
-
-    def update_btns(self, buttons):
         context = {0: ("Cancel", "Cancel operation."),
                    1: ("Confirm", "Confirm operation."),
                    }
-
-        for num in range(buttons):
-            text = context.get(num)[0]
-            message = context.get(num)[1]
-
-            buttons[num].config(text=text)
-            buttons[num].set_message(message)
-            buttons[num].set_status(self.root.status_set[0], self.root.status_set[1])
+        self.root.update_btns([cancel_btn, ok_btn], context)
 
 
     def ok(self, screen):
@@ -671,19 +658,9 @@ class Toolbar(tk.Menu):
         ok.grid(row=3, column=0, sticky=tk.SE, padx=(0, 10), pady=(10, 10))
         ok.bind("<Button-1>", lambda event, screen=about: self.cancel(screen))
 
-        self.update_btns([ok])
+        context = {0: ("Ok", "Information regarding software version and creator.")}
+        self.root.update_btns([ok], context)
 
-    def update_btns(self, buttons):
-        context = {0: ("Ok", "Information regarding software version and creator."),
-                   }
-
-        for num in range(len(buttons)):
-            text = context.get(num)[0]
-            message = context.get(num)[1]
-
-            buttons[num].config(text=text)
-            buttons[num].set_message(message)
-            buttons[num].set_status(self.root.status_set[0], self.root.status_set[1])
 
     def cancel(self, screen):
         screen.destroy()
@@ -875,7 +852,11 @@ class Tutorial(tk.Toplevel):
         self.next.bind("<Button-1>", lambda event, root=self, increase=True: self.change_tip(root, increase))
         self.previous.bind("<Button-1>", lambda event, root=self, increase=False: self.change_tip(root, increase))
 
-        self.update_btns([self.cancel, self.next, self.previous])
+        context = {0: ("Ok", "Exit tutorial."),
+                   1: ("Next", "Next tip."),
+                   2: ("Previous", "Previous tip."),
+                   }
+        self.root.update_btns([self.cancel, self.next, self.previous], context)
 
     def close(self, root):
         root.destroy()
@@ -889,21 +870,6 @@ class Tutorial(tk.Toplevel):
         img2 = "test{num}.jpg".format(num=self.count)
         self.img = ImageTk.PhotoImage(Image.open(img2).resize((500, 350)))
         self.bg.itemconfig(self.bg_image, image=self.img)
-
-    def update_btns(self, buttons):
-        context = {0: ("Ok", "Exit tutorial."),
-                   1: ("Next", "Next tip."),
-                   2: ("Previous", "Previous tip."),
-                   }
-
-        for num in range(len(buttons)):
-            text = context.get(num)[0]
-            message = context.get(num)[1]
-
-            buttons[num].config(text=text)
-            buttons[num].set_message(message)
-            buttons[num].set_status(self.root.status_set[0], self.root.status_set[1])
-
 
 
 if __name__ == "__main__":
