@@ -18,10 +18,7 @@ class Main(tk.Frame):
 
         self.messenger = Messages(self)
         self.toolbar = Toolbar(self)
-
         self.status_container = StatusField(self)
-        self.status_set = [self.status_container.status_bar, self.status_container.status]
-
         self.search_set = SearchField(self)
         self.image_results = ImageResults(self)
         self.news_results = NewsResults(self)
@@ -176,7 +173,7 @@ class Main(tk.Frame):
 
             buttons[num].config(text=text)
             buttons[num].set_message(message)
-            buttons[num].set_status(self.status_set[0], self.status_set[1])
+            buttons[num].set_status(self.status_container.status_bar, self.status_container.status)
 
 
 class StatusField(tk.Frame):
@@ -196,7 +193,7 @@ class StatusField(tk.Frame):
 class SearchField(tk.Frame):
     def __init__(self, root):
         tk.Frame.__init__(self, root)
-        self.root, self.status_set = root, root.status_set
+        self.root = root
 
         self.home_btn = ColorButtons(self)
         self.news = ColorButtons(self)
