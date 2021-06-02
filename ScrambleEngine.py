@@ -666,82 +666,69 @@ class Toolbar(tk.Menu):
         self.root.quit()
 
     def change_theme(self, theme):
+        gray = "#F0F0F0"
+        white = "white"
+        black = "black"
+        medium_gray = "#606060"
+        dark_gray = "#202020"
+        light_green = "#F6FFEE"
+        medium_green = "#CCFFCC"
+        leprechaun = "#29CB66"
+        yellow = "#FFFF99"
+
+        bar_text, button_default, button_hover, root_UI = None, None, None, None
+        canvas_bg, entry_txt, ctn_thickns, bar_thickns = None, None, None, None
+
         if theme == 0:
-            self.root["bg"] = "#F0F0F0"
-            self.root.root["bg"] = "#F0F0F0"
-
-            self.root.search_set["bg"] = "#F0F0F0"
-
-
-            self.root.status_container.status_bar.itemconfig(self.root.status_container.status, fill="#606060")
-
-            self.root.status_container["bg"] = "#F0F0F0"
-            self.root.status_container["bd"] = 1
-            self.root.status_container["highlightthickness"] = 0
-            self.root.status_container["highlightbackground"] = "#F0F0F0"
-
-            self.root.status_container.status_bar["bg"] = "#F0F0F0"
-            self.root.status_container.status_bar["bd"] = 1
-            self.root.status_container.status_bar["highlightthickness"] = 1
-
-            self.root.search_set.search["fg"] = "#606060"
-            self.root.search_set.search["background"] = "#F0F0F0"
-
-            self.root.home.redCanvas["background"] = "white"
-            self.root.news_results.blueCanvas["background"] = "white"
-            self.root.image_results.blueCanvas["background"] = "white"
-
-            for canvas in self.root.news_results.news_canvas:
-                canvas["background"] = "white"
-
-            for canvas in self.root.image_results.images_canvas:
-                canvas["background"] = "white"
-
-            for canvas in self.root.news_results.news_canvas:
-                for item in self.root.news_results.canvas_objs:
-                    canvas.itemconfig(item, fill="black")
-
-            for button in self.root.search_set.buttons:
-                button["background"] = "#F6FFEE"
-                button.set_color("black", "#F6FFEE", "#CCFFCC")
-
+            bar_text = medium_gray
+            button_default = light_green
+            button_hover = medium_green
+            root_UI = gray
+            canvas_bg = white
+            entry_txt = black
+            ctn_thickns = 0
+            bar_thickns = 1
         else:
-            self.root["bg"] = "#202020"
-            self.root.root["bg"] = "#202020"
+            bar_text = leprechaun
+            button_default = leprechaun
+            button_hover = yellow
+            root_UI = dark_gray
+            canvas_bg = dark_gray
+            entry_txt = black
+            ctn_thickns = 1
+            bar_thickns = 0
 
-            self.root.search_set["bg"] = "#202020"
+        self.root["bg"] = root_UI
+        self.root.root["bg"] = root_UI
+        self.root.search_set["bg"] = root_UI
+        self.root.status_container.status_bar.itemconfig(self.root.status_container.status, fill=bar_text)
 
-            self.root.status_container.status_bar.itemconfig(self.root.status_container.status, fill="#29CB66")
+        self.root.status_container["bg"] = root_UI
+        self.root.status_container["bd"] = 1
+        self.root.status_container["highlightthickness"] = ctn_thickns
+        self.root.status_container["highlightbackground"] = root_UI
 
-            self.root.status_container["bg"] = "#202020"
-            self.root.status_container["bd"] = 1
-            self.root.status_container["highlightthickness"] = 1
-            self.root.status_container["highlightbackground"] = "#22A753"
+        self.root.status_container.status_bar["bg"] = root_UI
+        self.root.status_container.status_bar["bd"] = bar_thickns
+        self.root.status_container.status_bar["highlightthickness"] = bar_thickns
 
-            self.root.status_container.status_bar["bg"] = "#202020"
-            self.root.status_container.status_bar["bd"] = 0
-            self.root.status_container.status_bar["highlightthickness"] = 0
+        self.root.search_set.search["fg"] = bar_text
+        self.root.search_set.search["background"] = canvas_bg
 
-            self.root.search_set.search["fg"] = "#99FF99"
-            self.root.search_set.search["background"] = "#202020"
+        self.root.home.redCanvas["background"] = canvas_bg
+        self.root.news_results.blueCanvas["background"] = canvas_bg
+        self.root.image_results.blueCanvas["background"] = canvas_bg
 
-            self.root.home.redCanvas["background"] = "#202020"
-            self.root.news_results.blueCanvas["background"] = "#202020"
-            self.root.image_results.blueCanvas["background"] = "#202020"
-
-            for canvas in self.root.news_results.news_canvas:
-                canvas["background"] = "#202020"
-
-            for canvas in self.root.news_results.news_canvas:
-                for item in self.root.news_results.canvas_objs:
-                    canvas.itemconfig(item, fill="white")
-
-            for canvas in self.root.image_results.images_canvas:
-                canvas["background"] = "#202020"
-
-            for button in self.root.search_set.buttons:
-                button["background"] = "#29CB66"
-                button.set_color("black", "#29CB66", "#FFFF99")
+        for canvas in self.root.news_results.news_canvas:
+            canvas["background"] = canvas_bg
+        for canvas in self.root.image_results.images_canvas:
+            canvas["background"] = canvas_bg
+        for canvas in self.root.news_results.news_canvas:
+            for item in self.root.news_results.canvas_objs:
+                canvas.itemconfig(item, fill=black)
+        for button in self.root.search_set.buttons:
+            button["background"] = button_default
+            button.set_color(entry_txt, button_default, button_hover)
 
 
 class Messages:
@@ -762,16 +749,8 @@ class ColorButtons(tk.Button):
     def __init__(self, root, **kwargs):
         tk.Button.__init__(self, root, **kwargs)
 
-        self.tip_msg = None
-
-        self.status_canvas = None
-        self.status_item = None
-        self.default_msg = "Status: "
-        self.default = True
-
-        self.fg = None
-        self.bg_default = "#F6FFEE"
-        self.bg_hover = "#CCFFCC"
+        self.tip_msg, self.status_canvas, self.status_item, self.fg, self.default = None, None, None, None, True
+        self.default_msg, self.bg_default, self.bg_hover = "Status: ", "#F6FFEE", "#CCFFCC"
 
         self["background"] = self.bg_default
 
