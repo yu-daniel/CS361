@@ -1,11 +1,11 @@
 import tkinter as tk
-import requests                 # handle HTTP requests
-from PIL import ImageTk, Image  # for embedding images to Python/Tkinter
-from io import BytesIO          # similar to previous
+import requests                 # GET requests from APIs & microservice(s)
+from PIL import ImageTk, Image  # image handling
+from io import BytesIO
 import random
 import webbrowser
 from dateutil import parser
-import re
+import re                       # split strings
 import time
 
 
@@ -13,9 +13,10 @@ class Main(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
         self.grid()
-        self.language = "en"
+        self.language = "en"    # current language the News API will use; default is English
         self.root = root
 
+        # initiate an instance for each area of the UI
         self.messenger = Messages(self)
         self.toolbar = Toolbar(self)
         self.status_container = StatusField(self)
@@ -23,6 +24,8 @@ class Main(tk.Frame):
         self.image_results = ImageResults(self)
         self.news_results = NewsResults(self)
         self.home = Home(self)
+
+        # allow switching different pages in the search results field
         self.frames = [self.news_results, self.image_results, self.home]
 
         self.root.config(menu=self.toolbar)
@@ -31,6 +34,10 @@ class Main(tk.Frame):
         self.language = language
 
     def search_text(self, event):
+        """
+        Deletes any user input and replaces the search field's placeholder with the default text.
+        """
+
         keyword = self.search_set.search.get()
 
         if keyword == "":
@@ -39,17 +46,23 @@ class Main(tk.Frame):
 
         self.search_set.search.delete(0, tk.END)
 
+        # enter the default text if it is currently not
         if keyword != self.search_set.get_tooltip():
             self.search_set.search.insert(0, "Enter <keyword> to search...")
 
         root.focus()
 
     def click_search(self, event):
+        """
+        Callback function that listens for Button-1 clicks, which is bound to the Search button.
+        Captures the user's <keyword> in the search field and passes it to the news & image APIs.
+        """
         keyword = self.search_set.search.get()
 
         if keyword == self.search_set.get_tooltip():
             return
         else:
+            # add the user's keyword to the Search History
             self.toolbar.add_search_history(keyword)
 
             self.news_api(keyword)
@@ -62,12 +75,18 @@ class Main(tk.Frame):
         self.switch_page(0)
 
     def random_search(self, event):
+        """
+        Performs a "random" search for news & images, using a random <keyword>
+        from a third party microservice (by Alex Shin).
+        """
 
+        # get a random <keyword> from a Wikipedia article
         keywords = []
         response = requests.get("https://daniel-yu.herokuapp.com/get_random")
         divided = re.split(" | ,", response.json()["content"])
         num = random.randint(0, len(divided) - 1)
 
+        # use the above result as a keyword for the microservice - which we use to generate a second keyword
         keyword = divided[num]
         alex_response = requests.get("http://text-to-words.herokuapp.com/get_words/{k}".format(k=keyword))
         alex_response = alex_response.json()["words"]
@@ -81,16 +100,23 @@ class Main(tk.Frame):
             num = random.randint(0, len(keywords) - 1)
             keyword = keywords[num]
 
+        # the second keyword (if successfully returned), will be used for the news and images API
         self.image_api(keyword)
         self.news_api(keyword)
 
     def news_api(self, keyword):
-        key = "dde38eb277ba442caaaa89a152952773"
+        """
+        Uses News API to search for <keyword> based articles or by location/country's top headlines
+        """
 
-        country = self.toolbar.get_themes_var()
+        key = "dde38eb277ba442caaaa89a152952773"
+        country = self.toolbar.get_themes_var()     # get current location/country that's selected
+
+        # get news content from the API using the input <keyword>
         url = "https://newsapi.org/v2/everything?q=" \
               "{k}&apiKey={key}&language={l}".format(k=keyword, key=key, l=self.language)
 
+        # use endpoint by top-headlines if any country is selected
         if country != self.toolbar.get_countries()[0][0]:
             url = "https://newsapi.org/v2/top-headlines?country={c}&apiKey={k}".format(c=country, k=key)
             self.toolbar.set_en()
@@ -104,10 +130,15 @@ class Main(tk.Frame):
             for x in range(len(results["articles"]) - 1):
                 temp_news.append(results["articles"][x])
             self.news_results.set_news(temp_news)
+        # when the API find no relevant articles, display a message to the user
         else:
             self.status_container.status_bar.itemconfig(self.status_container.status, text="Results found: 0")
 
     def image_api(self, keyword):
+        """
+        Use Pexel API to search images based on the keyword. Per page limit set to 27, and only use the
+        first page to following hourly/monthly request limits (i.e. free tier).
+        """
 
         temp_images, images = [], []
 
@@ -120,27 +151,38 @@ class Main(tk.Frame):
         response = requests.get(url, headers={"Authorization": key,
                                               "X-Ratelimit-Remaining": "X-Ratelimit-Remaining"})
 
+        # when there is at least one "hit", extract and save the image from the JSON response
         if response.json()["total_results"] != 0:
-
             for y in response.json()["photos"]:
                 images.append(y["src"])
-
             for x in images:
                 response = requests.get(x[size])
                 im1 = Image.open(BytesIO(response.content))
                 im1.thumbnail((800, 800))
                 temp_images.append(im1)
             self.image_results.set_images(temp_images)
+        # inform the user if no results are found
         else:
             self.status_container.status_bar.itemconfig(self.status_container.status, text="Results found: 0")
 
     def update_message(self, widget):
+        """
+        Callback function that detects mouse hovering over the Search button.
+        Updates the status bar's "tips" that corresponds to the search field.
+        """
         self.messenger.set_current(widget)
         status_message = self.messenger.get_current()
+
+        # update status bar's text to match the search field's
         self.status_container.status_bar.itemconfig(self.status_container.status, text=status_message)
 
     def switch_page(self, page):
-        frame = self.frames[page]
+        """
+        Displays different type of contents in the search results area by allowing the user to
+        use the Home, News, and Images button for toggling.
+        """
+
+        frame = self.frames[page]       # get the current page that the user selects
         num_entries = 0
 
         if page == 0:
@@ -149,6 +191,9 @@ class Main(tk.Frame):
             num_entries += 9
 
         for x in range(3):
+            # for News and Images page, show the scrollbar and bind the mousewheel for scrolling
+            # each page of the search results.
+            # bind the Previous and Next buttons for the user to navigate between different pages of search results.
             if page == 0 or page == 1:
                 self.frames[x].scrollbar.grid()
                 self.frames[page].redCanvas.bind_all("<MouseWheel>", self.frames[page].scroll_canvas)
@@ -156,20 +201,28 @@ class Main(tk.Frame):
                                              lambda event: self.frames[page].increase_page(num_entries, True))
                 self.search_set.back.bind("<Button-1>",
                                           lambda event: self.frames[page].increase_page(num_entries * -1, False))
+            # show the frame for the current page
             if page == x:
                 self.frames[x].redCanvas.grid()
+            # hide all other frames besides the current one
             else:
                 self.frames[x].redCanvas.grid_remove()
                 self.frames[x].scrollbar.grid_remove()
         frame.tkraise()
 
-    def open_link(self, arg):
-        webbrowser.open_new(arg)
+    def open_link(self, link):
+        """
+        Opens the web browser that links to the argument link
+        """
+        webbrowser.open_new(link)
 
     def update_btns(self, buttons, data):
+        """
+        Add a label and "tip" for each button in the "buttons" list using the input dictionary data
+        """
         for num in range(len(buttons)):
-            text = data.get(num)[0]
-            message = data.get(num)[1]
+            text = data.get(num)[0]         # the button's label
+            message = data.get(num)[1]      # the button's "tip"
 
             buttons[num].config(text=text)
             buttons[num].set_message(message)
@@ -177,12 +230,18 @@ class Main(tk.Frame):
 
 
 class StatusField(tk.Frame):
+    """
+    The status bar that is located at the button of the UI, which display "tips" to the user,
+    whenever his/her mouse pointer hovers over a widget, such as a button or the search field.
+    The status bar is a frame that contains a canvas with text (i.e. the tips).
+    """
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self.root = root
         self["relief"], self["borderwidth"] = "groove", "2"
         self.status_message = self.root.messenger.get_current()
 
+        # initiate the canvas which will hold the text/"tip"
         self.status_bar = tk.Canvas(self, width=655, height=15)
         self.status_bar.grid(row=0, column=0, columnspan=102, sticky=tk.SW, padx=(0, 0), pady=(0, 0))
         self.status = self.status_bar.create_text(10, 0, anchor="nw", text=self.status_message, fill="#606060")
@@ -191,10 +250,15 @@ class StatusField(tk.Frame):
 
 
 class SearchField(tk.Frame):
+    """
+    Area of the UI that contains that hold all the buttons (i.e. Home, News, Images, etc) and the search field.
+    Essentially it's a frame with buttons and an entry.
+    """
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self.root = root
 
+        # initiate each of the buttons
         self.home_btn = ColorButtons(self)
         self.news = ColorButtons(self)
         self.images = ColorButtons(self)
@@ -203,26 +267,27 @@ class SearchField(tk.Frame):
         self.search_btn = ColorButtons(self)
         self.bored = ColorButtons(self)
 
+        # initiate the search field
         self.search = tk.Entry(self, width=100, fg="#606060")
 
+        # set the position of the frame and all the buttons (& entry) that it holds
         self.grid(row=0, column=0, columnspan=102, sticky=tk.W)
 
-        # position of objects (buttons, search entry, labels)
+        # set the position of buttons (and entry) within this frame
         self.home_btn.grid(row=0, column=0, sticky=tk.W, padx=(10, 3), pady=7)
         self.news.grid(row=0, column=1, sticky=tk.W, padx=3, pady=7)
         self.images.grid(row=0, column=2, sticky=tk.W, padx=3, pady=7)
         self.bored.grid(row=0, column=3, sticky=tk.W, padx=3, pady=7)
         self.back.grid(row=0, column=4, sticky=tk.W, padx=3, pady=7)
         self.forward.grid(row=0, column=5, sticky=tk.W, padx=3, pady=7)
-
-        # add search field, search button, and search results position
         self.search.grid(row=1, column=0, columnspan=100, sticky=tk.W, padx=(10, 10), pady=7)
         self.search_btn.grid(row=1, column=101, sticky=tk.W, padx=(0, 10))
 
-
-        # add search field
+        # add a placeholder for the search field
         self.tooltip = "Enter <keyword> to search..."
         self.search.insert(0, self.tooltip)
+
+        # add clicking interaction for the search field and for each button
         self.search.bind("<Button-1>", self.root.search_text)  # bind mouse click to search field's placeholder
         self.search_btn.bind("<Button-1>", self.root.click_search)
 
@@ -234,6 +299,7 @@ class SearchField(tk.Frame):
         self.images.bind("<Button-1>", lambda event: self.root.switch_page(1))
         self.bored.bind("<Button-1>", self.root.random_search)
 
+        # set of button names and description of their use
         context = {0: ("Home", "System: return to the Home page."),
                    1: ("News", "System: search <keyword> for the latest news articles."),
                    2: ("Images", "System: explore current images for <keyword>."),
@@ -243,6 +309,7 @@ class SearchField(tk.Frame):
                    6: ("I'm Feeling Bored", "No idea what to search for? Let me help!"),
                    }
 
+        # add the button labels (i.e. their names) and their description
         self.buttons = [self.home_btn, self.news, self.images, self.back, self.forward, self.search_btn, self.bored]
         self.root.update_btns(self.buttons, context)
 
@@ -251,6 +318,9 @@ class SearchField(tk.Frame):
 
 
 class Home(tk.Frame):
+    """
+    The interface for the "Home" page - a frame that contains a canvas that will hold the app's logo
+    """
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self["borderwidth"] = 1
@@ -258,6 +328,9 @@ class Home(tk.Frame):
 
         self.redCanvas = tk.Canvas(root, width=655, height=500, bg="#F9F9F9", bd=1, highlightthickness=2,
                                    highlightbackground="green")
+
+        # scrollbar is created, but is hidden behind the canvas - since there is nothing to scroll
+        # however, having it here makes switching pages more easier
         self.scrollbar = tk.Scrollbar(root, command=self.redCanvas.yview, orient=tk.VERTICAL)
 
         self.bg = ImageTk.PhotoImage(Image.open("bg.png").resize((600, 88)))
@@ -293,6 +366,8 @@ class Results(tk.Frame):
         self.redCanvas.bind_all("<MouseWheel>", self.scroll_canvas)
 
     def scroll_canvas(self, event):
+        """
+        """
         increment = 0
 
         if event.delta == 120:
@@ -327,6 +402,8 @@ class NewsResults(Results):
         self.root.search_set.back.bind("<Button-1>", lambda root: self.increase_page(-5, False))
 
     def increase_page(self, num, increase):
+        """
+        """
         if self.end <= 15 and increase is True:
             self.start += num
             self.end += num
@@ -338,7 +415,8 @@ class NewsResults(Results):
             self.set_news(self.news)
 
     def set_news(self, news_list):
-
+        """
+        """
         self.news = news_list
 
         if len(news_list) == 0:
@@ -352,6 +430,8 @@ class NewsResults(Results):
         self.extract_content(news_list)
 
     def extract_content(self, news_list):
+        """
+        """
         categories = ["title", "publishedAt", "author", "description"]
         for x in range(5):
             content = []
@@ -366,6 +446,8 @@ class NewsResults(Results):
             self.create_text(content, x, news_list)
 
     def create_text(self, content, entry_num, news_list):
+        """
+        """
         font_color = self.root.toolbar.get_color()
 
         # add the article's title to the entry (i.e. canvas)
@@ -393,9 +475,13 @@ class NewsResults(Results):
                                          lambda event, arg=self.news_canvas[entry_num]: self.mouse_in(arg))
 
     def close_image(self, arg):
+        """
+        """
         arg.destroy()
 
     def mouse_in(self, widget):
+        """
+        """
         widget["cursor"] = "@mario.ani"
 
 
