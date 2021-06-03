@@ -1,11 +1,11 @@
 import tkinter as tk
-import requests                 # GET requests from APIs & microservice(s)
+import requests  # GET requests from APIs & microservice(s)
 from PIL import ImageTk, Image  # image handling
 from io import BytesIO
 import random
 import webbrowser
 from dateutil import parser
-import re                       # split strings
+import re  # split strings
 import time
 
 
@@ -13,7 +13,7 @@ class Main(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
         self.grid()
-        self.language = "en"    # current language the News API will use; default is English
+        self.language = "en"  # current language the News API will use; default is English
         self.root = root
 
         # initiate an instance for each area of the UI
@@ -110,7 +110,7 @@ class Main(tk.Frame):
         """
 
         key = "dde38eb277ba442caaaa89a152952773"
-        country = self.toolbar.get_themes_var()     # get current location/country that's selected
+        country = self.toolbar.get_themes_var()  # get current location/country that's selected
 
         # get news content from the API using the input <keyword>
         url = "https://newsapi.org/v2/everything?q=" \
@@ -182,7 +182,7 @@ class Main(tk.Frame):
         use the Home, News, and Images button for toggling.
         """
 
-        frame = self.frames[page]       # get the current page that the user selects
+        frame = self.frames[page]  # get the current page that the user selects
         num_entries = 0
 
         if page == 0:
@@ -221,8 +221,8 @@ class Main(tk.Frame):
         Add a label and "tip" for each button in the "buttons" list using the input dictionary data
         """
         for num in range(len(buttons)):
-            text = data.get(num)[0]         # the button's label
-            message = data.get(num)[1]      # the button's "tip"
+            text = data.get(num)[0]  # the button's label
+            message = data.get(num)[1]  # the button's "tip"
 
             buttons[num].config(text=text)
             buttons[num].set_message(message)
@@ -235,6 +235,7 @@ class StatusField(tk.Frame):
     whenever his/her mouse pointer hovers over a widget, such as a button or the search field.
     The status bar is a frame that contains a canvas with text (i.e. the tips).
     """
+
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self.root = root
@@ -254,6 +255,7 @@ class SearchField(tk.Frame):
     Area of the UI that contains that hold all the buttons (i.e. Home, News, Images, etc) and the search field.
     Essentially it's a frame with buttons and an entry.
     """
+
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self.root = root
@@ -321,6 +323,7 @@ class Home(tk.Frame):
     """
     The interface for the "Home" page - a frame that contains a canvas that will hold the app's logo
     """
+
     def __init__(self, root):
         tk.Frame.__init__(self, root)
         self["borderwidth"] = 1
@@ -367,6 +370,7 @@ class Results(tk.Frame):
 
     def scroll_canvas(self, event):
         """
+
         """
         increment = 0
 
@@ -378,11 +382,14 @@ class Results(tk.Frame):
         self.redCanvas.yview_scroll(increment, "units")
 
     def update_scrollbar(self, event):
-        # set scrolling region of the 'red' canvas
+        """Sets the scrolling region for the canvas"""
         self.redCanvas.configure(scrollregion=self.redCanvas.bbox("all"))
 
 
 class NewsResults(Results):
+    """
+    Frame that would hold all the entries (canvas) for news articles.
+    """
     def __init__(self, root):
         Results.__init__(self, root)
         self.root = root
@@ -403,12 +410,17 @@ class NewsResults(Results):
 
     def increase_page(self, num, increase):
         """
+        Increases the set of news articles to display when pressing the "Next" button,
+        otherwise, decreases the set of news articles when pressing the "Previous" button.
         """
+
+        # currently the max # of news articles that is pulled each time from News API is set to a limit of 15
         if self.end <= 15 and increase is True:
             self.start += num
             self.end += num
             self.set_news(self.news)
 
+        # when "increase" is False, this indicates the user is pressing the "Previous" button
         elif self.start > 0 and increase is False:
             self.start += num
             self.end += num
@@ -416,12 +428,15 @@ class NewsResults(Results):
 
     def set_news(self, news_list):
         """
+        Discards any existing news articles and calls extract_content() to populate new results.
         """
         self.news = news_list
 
         if len(news_list) == 0:
             return None
 
+        # everytime a new search is performed, any previous news articles shown in the search results
+        # area will be discard to make room for the new results
         if len(self.canvas_objs) != 0:
             for canvas in self.news_canvas:
                 for x in range(4):
@@ -431,8 +446,11 @@ class NewsResults(Results):
 
     def extract_content(self, news_list):
         """
+        For the current article, extract its title, publish date, author, and abstract from JSON
         """
         categories = ["title", "publishedAt", "author", "description"]
+
+        # the frame holds up to five news articles at once
         for x in range(5):
             content = []
             if (self.start + x) < len(news_list):
@@ -441,31 +459,34 @@ class NewsResults(Results):
                     if data is None:
                         data = "N/A"
                     elif y == "publishedAt":
+                        # parse the default date string into a date object
                         data = parser.parse(data).date()
                     content.append(data)
             self.create_text(content, x, news_list)
 
     def create_text(self, content, entry_num, news_list):
         """
+        With the article's extracted data, add the title, date, source, and abstract to the current entry (canvas).
         """
         font_color = self.root.toolbar.get_color()
 
-        # add the article's title to the entry (i.e. canvas)
+        # add the article's title to the entry
         title = self.news_canvas[entry_num].create_text(5, 25, text=content[0], anchor='nw', width=600,
                                                         fill=font_color, font=("Arial", 10, "bold"))
 
-        # add the date that the article was published to the entry (i.e. canvas)
+        # add the date that the article was published to the entry
         date = self.news_canvas[entry_num].create_text(5, 60, text=content[1], anchor='nw', width=600,
                                                        fill=font_color, font=("Arial", 8, "normal"))
 
-        # add the article source to the entry (i.e. canvas)
+        # add the article source to the entry
         source = self.news_canvas[entry_num].create_text(5, 75, text="Source: " + content[2], anchor='nw', width=600,
                                                          fill=font_color, font=("Arial", 8, "normal"))
 
-        # add the article's abstract to the entry (i.e. canvas)
+        # add the article's abstract to the entry
         abstract = self.news_canvas[entry_num].create_text(5, 105, text=content[3], anchor='nw', width=600,
                                                            fill=font_color)
 
+        # add the handler to a list so its iterable later on
         self.canvas_objs.extend((title, date, source, abstract))
 
         self.news_canvas[entry_num].grid(row=entry_num)
@@ -476,16 +497,21 @@ class NewsResults(Results):
 
     def close_image(self, arg):
         """
+        Destroys the argument widget
         """
         arg.destroy()
 
     def mouse_in(self, widget):
         """
+        The argument widget's default cursor is set to a custom Mario cursor.
         """
         widget["cursor"] = "@mario.ani"
 
 
 class ImageResults(Results):
+    """
+    This frame contain canvases where each holds an photo/image, ones from search results.
+    """
     def __init__(self, root):
         Results.__init__(self, root)
         self.root = root
@@ -493,6 +519,7 @@ class ImageResults(Results):
         self.images, self.images_canvas = [], []
         self.start, self.end = 0, 9
 
+        # initiate canvases for image(s), where the frame displays up to nine results at once
         for x in range(3):
             for y in range(3):
                 image = tk.Canvas(self.blueCanvas, height=180, width=180, bg="#F9FFF3", bd=1, highlightthickness=2,
@@ -501,13 +528,15 @@ class ImageResults(Results):
                 self.images_canvas.append(image)
 
     def increase_page(self, num, increase):
+        """
+
+        """
         if len(self.images) == 0:
             return
 
         if self.end < 27 and increase is True:
             self.start += num
             self.end += num
-
             self.set_images(self.images)
 
         elif self.start > 0 and increase is False:
@@ -516,6 +545,11 @@ class ImageResults(Results):
             self.set_images(self.images)
 
     def set_images(self, img_set):
+        """
+        Discard existing images in all the canvases and replace them with new images from 'img_set'.
+        For each image, bind callback functions that allow the user to see larger resolution of the image,
+        and also a custom mouse pointer when the image is hovered.
+        """
         self.images = img_set
 
         # clear any existing image and add new image to canvas
@@ -531,6 +565,10 @@ class ImageResults(Results):
                                            lambda event, arg=self.images_canvas[x]: self.mouse_in(arg))
 
     def enlarge_images(self, arg):
+        """
+        Creates a new toplevel window that contains the image, with the resolution depending on
+        the app's setting (small, medium, or large).
+        """
         image_window = tk.Toplevel(self)
         image_window.geometry(self.find_img_size(arg))
         image_window.resizable(False, False)
@@ -538,29 +576,47 @@ class ImageResults(Results):
 
         image_label = tk.Label(image_window, image=arg[0])
         image_label.grid(row=0, column=0)
+
+        # allow user to use left-mouse click to close the image, and also a Mario cursor when hovered
         image_label.bind("<Button-1>", lambda event, arg=image_window: self.close_image(arg))
         image_label.bind("<Enter>", lambda event, arg=image_label: self.mouse_in(arg))
 
     def find_img_size(self, img):
+        """
+        Takes an image 'img' and find its width and height.
+        Return its width and height as a string, "{width}x{height}".
+        """
         width = img[1].size[0]
         height = img[1].size[1]
         size = "{width}x{height}".format(width=width, height=height)
         return size
 
     def close_image(self, arg):
+        """
+        Destroys the argument widget
+        """
         arg.destroy()
 
     def mouse_in(self, widget):
+        """
+        The argument widget's default cursor is set to a custom Mario cursor.
+        """
         widget["cursor"] = "@mario.ani"
 
 
 class Toolbar(tk.Menu):
+    """
+    The main toolbar, made up of four menus: File, View, Advanced, Help.
+    """
     def __init__(self, root):
         super().__init__(root)
         self.menu = tk.Menu(self)
         self.root = root
 
         self.search_history = []
+
+        # this is the list of countries that the user can choose to select headline news from
+        # each country has along its ISO country code, which is used by the News API
         self.countries = [("All", "All"), ("Australia", "au"), ("Brazil", "br"), ("Canada", "ca"), ("China", "zh"),
                           ("Germany", "de"), ("United Kingdom", "gb"), ("Hong Kong", "hk"), ("Israel", "il"),
                           ("India", "in"), ("Italy", "it"), ("Japan", "jp"), ("South Korea", "kr"), ("Mexico", "mx"),
@@ -568,18 +624,18 @@ class Toolbar(tk.Menu):
                           ("Thailand", "th"), ("Taiwan", "tw"), ("United States", "us")
                           ]
 
-        # file menu
+        # File menu
         self.file = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="File", menu=self.file)
 
         self.setting = tk.Menu(self.menu, tearoff=0)
-        self.setting.add_command(label="Clear History", command=self.show_confirm, accelerator="Ctrl+Q")
+        self.setting.add_command(label="Clear History", command=self.show_confirm)
         self.file.add_cascade(label="Settings", menu=self.setting)
 
         self.file.add_separator()
         self.file.add_command(label="Exit", command=self.exit)
 
-        # view menu
+        # View menu
         self.view = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="View", menu=self.view)
 
@@ -589,7 +645,7 @@ class Toolbar(tk.Menu):
         self.view.add_separator()
         self.view.add_cascade(label="Search History", menu=self.searches)
 
-        # advanced menu
+        # Set the default items for radio buttons
         self.themes_var = tk.StringVar()
         self.languages = tk.StringVar()
         self.image_var = tk.StringVar()
@@ -604,6 +660,7 @@ class Toolbar(tk.Menu):
         self.color_mode.add_radiobutton(label="Dark", value="white", variable=self.color,
                                         command=lambda: self.change_theme(1))
 
+        # Advanced menu
         self.advanced = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Advanced", menu=self.advanced)
 
@@ -628,7 +685,7 @@ class Toolbar(tk.Menu):
         self.advanced.add_radiobutton(label="Español", variable=self.languages, command=lambda: self.set_language("es"))
         self.advanced.add_radiobutton(label="中文", variable=self.languages, command=lambda: self.set_language("zh"))
 
-        # help menu
+        # Help menu
         self.help = tk.Menu(self.menu, tearoff=0)
         self.add_cascade(label="Help", menu=self.help)
         self.help.add_command(label="Homepage",
@@ -639,6 +696,9 @@ class Toolbar(tk.Menu):
         self.help.add_command(label="About...", command=self.show_about)
 
     def show_tutorial(self):
+        """
+        Create and displays the app tutorial.
+        """
         Tutorial(self.root)
 
     def get_countries(self):
@@ -661,15 +721,25 @@ class Toolbar(tk.Menu):
         self.root.set_language(language)
 
     def add_search_history(self, keyword):
+        """
+        Add 'keyword' to the Search History
+        """
         self.search_history.append(keyword)
-
         self.searches.add_command(label=keyword, command=lambda: self.from_history(keyword))
 
     def from_history(self, keyword):
+        """
+        When a 'keyword' from Search History menu is clicked, a search is performed again
+        using this keyword.
+        """
         self.root.image_api(keyword)
         self.root.news_api(keyword)
 
     def show_confirm(self):
+        """
+        When initiating Clear History, a confirmation window is displayed to the user,
+        asking again to  confirm deleting all history.
+        """
         confirm_screen = tk.Toplevel(self)
         root_x = self.root.winfo_x() + 250
         root_y = self.root.winfo_y() + 330
@@ -682,7 +752,7 @@ class Toolbar(tk.Menu):
         confirm_frame = tk.Frame(confirm_screen)
         confirm_frame.grid(row=0, column=0)
 
-        confirm_msg = tk.Label(confirm_frame, text="Ready to clear all search history?")
+        confirm_msg = tk.Label(confirm_frame, text="Clear all search history?")
         confirm_msg.grid(row=0, column=0, columnspan=2)
 
         cancel_btn = ColorButtons(confirm_frame)
@@ -698,8 +768,10 @@ class Toolbar(tk.Menu):
                    }
         self.root.update_btns([cancel_btn, ok_btn], context)
 
-
     def ok(self, screen):
+        """
+        Delete all keywords (if any) in the Search History list.
+        """
         history_total = self.searches.index("end")
 
         if history_total is not None:
@@ -709,6 +781,9 @@ class Toolbar(tk.Menu):
         screen.destroy()
 
     def show_about(self):
+        """
+        Create a toplevel window that shows the software logo, version, and creator.
+        """
         about = tk.Toplevel(self)
 
         x = root.winfo_x() + 150
@@ -730,7 +805,7 @@ class Toolbar(tk.Menu):
         logo.background = logo_image
         logo.create_image(0, 0, ancho=tk.NW, image=logo_image)
 
-        version = tk.Label(about_container, text="Version 1.1.1", fg="white", bg="#202020")
+        version = tk.Label(about_container, text="Version 1.3.0", fg="white", bg="#202020")
         version.grid(row=1, column=0)
 
         copyright = tk.Label(about_container, text="Copyright 2021 by Daniel Yu", fg="white", bg="#202020")
@@ -744,14 +819,20 @@ class Toolbar(tk.Menu):
         context = {0: ("Ok", "Information regarding software version and creator.")}
         self.root.update_btns([ok], context)
 
-
     def cancel(self, screen):
         screen.destroy()
 
     def exit(self):
+        """
+        Exists the app.
+        """
         self.root.quit()
 
     def change_theme(self, theme):
+        """
+        Changes each individual component of the UI based on the 'theme' that is selected
+        in the toolbar View -> Theme -> Light | Dark
+        """
         gray = "#F0F0F0"
         white = "white"
         black = "black"
@@ -784,11 +865,19 @@ class Toolbar(tk.Menu):
             ctn_thickns = 1
             bar_thickns = 0
 
+        # the parent (root) frame,
         self.root["bg"] = root_UI
         self.root.root["bg"] = root_UI
+
+        # search field
         self.root.search_set["bg"] = root_UI
+        self.root.search_set.search["fg"] = bar_text
+        self.root.search_set.search["background"] = canvas_bg
+
+        # text color for the status bar
         self.root.status_container.status_bar.itemconfig(self.root.status_container.status, fill=bar_text)
 
+        # status bar's background and border
         self.root.status_container["bg"] = root_UI
         self.root.status_container["bd"] = 1
         self.root.status_container["highlightthickness"] = ctn_thickns
@@ -798,20 +887,25 @@ class Toolbar(tk.Menu):
         self.root.status_container.status_bar["bd"] = bar_thickns
         self.root.status_container.status_bar["highlightthickness"] = bar_thickns
 
-        self.root.search_set.search["fg"] = bar_text
-        self.root.search_set.search["background"] = canvas_bg
-
+        # search results' background
         self.root.home.redCanvas["background"] = canvas_bg
         self.root.news_results.blueCanvas["background"] = canvas_bg
         self.root.image_results.blueCanvas["background"] = canvas_bg
 
+        # search results - news canvas background
         for canvas in self.root.news_results.news_canvas:
             canvas["background"] = canvas_bg
+
+        # search results - images canvas background
         for canvas in self.root.image_results.images_canvas:
             canvas["background"] = canvas_bg
+
+        # each news entry's text color
         for canvas in self.root.news_results.news_canvas:
             for item in self.root.news_results.canvas_objs:
                 canvas.itemconfig(item, fill=black)
+
+        # each button's default/hovered color
         for button in self.root.search_set.buttons:
             button["background"] = button_default
             button.set_color(entry_txt, button_default, button_hover)
@@ -832,14 +926,20 @@ class Messages:
 
 
 class ColorButtons(tk.Button):
+    """
+    Modified Tkinter Button widget - changing default the button's default background color
+    and also changing color when mouse pointer is hovered over the object.
+    """
     def __init__(self, root, **kwargs):
         tk.Button.__init__(self, root, **kwargs)
 
         self.tip_msg, self.status_canvas, self.status_item, self.fg, self.default = None, None, None, None, True
         self.default_msg, self.bg_default, self.bg_hover = "Status: ", "#F6FFEE", "#CCFFCC"
 
+        # default button color is a "light green" - when app is launched (in light mode)
         self["background"] = self.bg_default
 
+        # change button color as the mouse enter/leaves the button
         self.bind("<Enter>", lambda event, arg=0: self.update_message(arg))
         self.bind("<Leave>", lambda event, arg=1: self.update_message(arg))
 
@@ -851,6 +951,10 @@ class ColorButtons(tk.Button):
         self.tip_msg = msg
 
     def update_message(self, arg):
+        """
+        Updates the status bar's "tip" that corresponds to the current button, and also
+        change its default color to the hovered color.
+        """
         msg = ""
         if arg == 0:
             msg = self.tip_msg
@@ -874,17 +978,18 @@ class ColorButtons(tk.Button):
 
 
 class Tutorial(tk.Toplevel):
+    """
+    Creates a toplevel window that is the Tutorial for the user.
+    """
     def __init__(self, root):
         tk.Toplevel.__init__(self, root)
         self.root = root
 
-        # find parent window's position
+        # find parent window's position to create the toplevel at a specific position
         x = root.winfo_x() + 250
         y = root.winfo_y() + 230
 
-        # (width)x(height)+(x-position)+(y-position)
         self.geometry("500x350+{x}+{y}".format(x=x, y=y))
-
         self.resizable(False, False)
         self.transient(root)
 
@@ -897,7 +1002,7 @@ class Tutorial(tk.Toplevel):
         self.cancel = ColorButtons(self.main)
         self.cancel.grid(row=0, column=2, sticky=tk.S)
 
-        self.next = ColorButtons(self.main,)
+        self.next = ColorButtons(self.main, )
         self.next.grid(row=0, column=1, sticky=tk.S)
 
         self.previous = ColorButtons(self.main)
@@ -929,6 +1034,7 @@ class Tutorial(tk.Toplevel):
         elif self.count > 1 and increase is False:
             self.count -= 1
 
+        # change the "tip" depending on the current count
         img2 = "test{num}.jpg".format(num=self.count)
         self.img = ImageTk.PhotoImage(Image.open(img2).resize((500, 350)))
         self.bg.itemconfig(self.bg_image, image=self.img)
